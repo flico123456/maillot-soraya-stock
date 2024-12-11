@@ -9,18 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/next-auth": "^3.15.0",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
+    "dynamsoft-camera-enhancer": "^4.1.0",
+    "dynamsoft-javascript-barcode": "^9.6.42",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.3",
+    "next": "14.2.11",
+    "next-auth": "^4.24.7",
+    "quagga": "^0.12.1",
     "react": "^18",
-    "react-dom": "^18",
-    "next": "14.2.11"
+    "react-barcode-scanner": "^2.1.0",
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
     "eslint": "^8",
-    "eslint-config-next": "14.2.11"
+    "eslint-config-next": "14.2.11",
+    "postcss": "^8",
+    "react-barcode-reader": "^0.0.2",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }

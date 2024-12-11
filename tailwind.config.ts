@@ -9,9 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        'gris': '#BDBDBD',
+        'color-soraya': '#bda86e',
+        "color-soraya-2" :"#CFBD8C",
+        "color-soraya-3": "#E3BB9B",
+        "color-header": "#f8f8f8",
+        "color-soraya-4": "#bda86e",
+        "color-bordeau": "#4f2a11"
       },
+      width: {
+        '600': '800px',
+      },
+      maxHeight: {
+        '600': '600px',
+      }
     },
   },
   plugins: [],
