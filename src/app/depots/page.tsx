@@ -6,21 +6,28 @@ import ButtonAddDepot from "../components/Depots/ButtonAddDepot";
 import ButtonEditDepot from "../components/Depots/ButtonUpdateDepot";
 import ButtonDeleteDepot from "../components/Depots/ButtonDeleteDepot";
 
+interface Depot {
+    id: number;
+    name: string;
+    localisation: string;
+    username_associe?: string;
+}
+
 export default function Depot({ children }: { children: React.ReactNode }) {
-    const [depotList, setDepotList] = useState<any[]>([]); // Initialisation avec un tableau vide
+    const [depotList, setDepotList] = useState<Depot[]>([]); // Typage explicite des dépôts
     const [loading, setLoading] = useState(true); // Pour afficher un indicateur de chargement
 
     // Fonction pour récupérer les dépôts depuis l'API
     const fetchDepots = async () => {
         try {
             const response = await fetch("http://51.222.13.7:3001/depots/select");
-            const data = await response.json();
+            const data: Depot[] = await response.json();
             console.log("Dépôts récupérés :", data);
             setDepotList(data); // Mise à jour de l'état avec les données
         } catch (error) {
             console.error("Erreur lors de la récupération des dépôts :", error);
         } finally {
-            setLoading(false); // On désactive le chargement après la récupération des données
+            setLoading(false); // Désactiver le chargement après la récupération des données
         }
     };
 
@@ -65,7 +72,7 @@ export default function Depot({ children }: { children: React.ReactNode }) {
                                                 <td className="py-2 px-4">{depot.id}</td>
                                                 <td className="py-2 px-4">{depot.name}</td>
                                                 <td className="py-2 px-4">{depot.localisation}</td>
-                                                <td className="py-2 px-4">{depot.username_associe}</td>
+                                                <td className="py-2 px-4">{depot.username_associe || "Non assigné"}</td>
                                             </tr>
                                         ))
                                     ) : (
@@ -84,8 +91,8 @@ export default function Depot({ children }: { children: React.ReactNode }) {
                     <div className="ml-10 mt-20 flex flex-col space-y-4">
                         {/* Passer la fonction refreshDepots comme prop à ButtonAddDepot */}
                         <ButtonAddDepot onDepotAdded={refreshDepots} />
-                        <ButtonEditDepot onDepotUpdated={refreshDepots}/>
-                        <ButtonDeleteDepot onDepotDeleted={refreshDepots}/>
+                        <ButtonEditDepot onDepotUpdated={refreshDepots} />
+                        <ButtonDeleteDepot onDepotDeleted={refreshDepots} />
                     </div>
                 </div>
             </div>

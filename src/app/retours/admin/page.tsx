@@ -17,6 +17,12 @@ interface Depot {
     localisation: string;
 }
 
+interface Product {
+    name: string;
+    sku: string;
+    stock_quantity: number;
+}
+
 interface ProductStock {
     nom_produit: string;
     sku: string;
@@ -30,21 +36,13 @@ export default function Retours({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
+    //const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
     const action = "Retour de stock"; // Action pour le PDF
-    const [username, setUsername] = useState<string | null>(null);
-    const [userLocalisation, setUserLocalisation] = useState<string | null>(null); // Localisation de l'utilisateur
-
-    useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
-        setUsername(storedUsername);
-    }, []);
 
     // Fonction pour récupérer tous les dépôts sans filtre
     const fetchAllDepots = async () => {
@@ -75,13 +73,14 @@ export default function Retours({ children }: { children: React.ReactNode }) {
             setError("Dépôt non trouvé.");
             return [];
         }
-
+    
         try {
             if (selectedDepotId === SAINT_CANNAT_ID) {
-                // Utiliser l'API WooCommerce si le dépôt est Saint-Cannat
                 const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`, {
                     headers: {
-                        Authorization: "Basic " + btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+                        Authorization:
+                            "Basic " +
+                            btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
                     },
                 });
                 if (!response.ok) {
@@ -92,32 +91,32 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                     setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
                     return [];
                 }
-                return data.map((product: any) => ({
+                return data.map((product: Product) => ({
                     nom_produit: product.name,
                     sku: product.sku,
                     quantite: product.stock_quantity,
                 }));
             } else {
-                // Utiliser l'API locale pour les autres dépôts
                 const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
-
+    
                 if (!response.ok) {
                     throw new Error("Erreur lors de la récupération des produits du dépôt local.");
                 }
-
+    
                 const data = await response.json();
                 if (data.length === 0) {
                     setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
                     return [];
                 }
-
-                // Extraction des produits à partir du champ "stock" (qui est un tableau JSON dans ta base de données)
-                const stockItems = data.flatMap((item: any) => JSON.parse(item.stock) as ProductStock[]);
-
+    
+                const stockItems = data.flatMap((item: { stock: string }) =>
+                    JSON.parse(item.stock) as ProductStock[]
+                );
+    
                 return stockItems;
             }
         } catch (error) {
@@ -126,9 +125,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         }
     };
 
-
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
 
         try {
@@ -137,7 +134,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
             for (const product of stocks) {
                 if (product.sku === sku) {
                     foundProduct = product;
-                    setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
+                    //setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
                     break;
                 }
             }
@@ -162,7 +159,6 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -254,7 +250,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                         body: JSON.stringify({
                             sku: product.sku,
                             quantite: product.quantity, // Ajouter la quantité au stock (positif pour les retours)
-                            motif: selectedMotif,
+                            nom_produit: product.name,
                         }),
                     });
 

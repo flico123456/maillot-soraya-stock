@@ -31,6 +31,12 @@ interface Depot {
     username_associe?: string;
 }
 
+interface DepotStockResponse {
+    id: number;
+    depot_id: number;
+    stock: string; // Chaîne JSON représentant le stock
+}
+
 // Fonction pour récupérer les produits classiques et variables depuis l'API custom
 const fetchProducts = async (): Promise<Product[]> => {
     try {
@@ -42,7 +48,9 @@ const fetchProducts = async (): Promise<Product[]> => {
                 },
             }
         );
-        return await response.json();
+        const data = await response.json();
+        console.log("Produits récupérés :", data); // Debug
+        return data;
     } catch (error) {
         console.error("Erreur lors de la récupération des produits :", error);
         return [];
@@ -50,7 +58,7 @@ const fetchProducts = async (): Promise<Product[]> => {
 };
 
 // Fonction pour récupérer les stocks depuis l'API locale
-const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
+const fetchLocalStock = async (depotId: number): Promise<DepotStockResponse[]> => {
     try {
         const response = await fetch(
             `http://localhost:3001/stock_by_depot/select/${depotId}`,
@@ -61,7 +69,9 @@ const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
                 },
             }
         );
-        return await response.json();
+        const data = await response.json();
+        console.log("Données brutes de fetchLocalStock :", data); // Debug
+        return data;
     } catch (error) {
         console.error("Erreur lors de la récupération des stocks locaux :", error);
         return [];
@@ -72,7 +82,9 @@ const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
 const fetchDepots = async (): Promise<Depot[]> => {
     try {
         const response = await fetch("http://localhost:3001/depots/select");
-        return await response.json();
+        const data = await response.json();
+        console.log("Dépôts récupérés :", data); // Debug
+        return data;
     } catch (error) {
         console.error("Erreur lors de la récupération des dépôts :", error);
         return [];
@@ -91,13 +103,12 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
 
     // Récupérer le rôle et le nom d'utilisateur depuis le localStorage
     useEffect(() => {
-        const storedRole = localStorage.getItem('role');
-        const storedUsername = localStorage.getItem('username');
+        const storedRole = localStorage.getItem("role");
+        const storedUsername = localStorage.getItem("username");
         setRole(storedRole);
         setUsername(storedUsername);
     }, []);
 
-    // Fonction pour récupérer les produits et leurs variations ou stocks locaux selon le dépôt
     const fetchStock = async () => {
         setLoading(true);
         try {
@@ -105,13 +116,23 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                 const products = await fetchProducts();
                 setProductList(products);
             } else if (selectedDepot !== null) {
-                const localStock = await fetchLocalStock(selectedDepot);
-                setProductList(localStock.map((item) => ({
-                    id: 0, // Remplir avec un identifiant fictif si nécessaire
-                    name: "",
-                    sku: item.sku,
-                    stock: [item],
-                })));
+                const localStockResponse: DepotStockResponse[] = await fetchLocalStock(selectedDepot);
+
+                // Vérifiez que la réponse contient des données et parsez 'stock'
+                const processedStock: Product[] = localStockResponse.flatMap((item, index) => {
+                    const parsedStock: StockItem[] = JSON.parse(item.stock || "[]");
+                    console.log("Stock analysé pour l'élément :", parsedStock);
+
+                    return parsedStock.map((stockItem) => ({
+                        id: index + 1, // Génération d'un ID unique
+                        name: stockItem.nom_produit,
+                        sku: stockItem.sku,
+                        stock: [stockItem],
+                    }));
+                });
+
+                console.log("Stock transformé en Product[] :", processedStock);
+                setProductList(processedStock);
             }
         } catch (error) {
             console.error("Erreur lors de la récupération des stocks :", error);
@@ -120,12 +141,13 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
         }
     };
 
-    // Récupérer la liste des dépôts lors du chargement du composant
     useEffect(() => {
         const loadDepots = async () => {
             const depots = await fetchDepots();
-            if (role === 'vendeuse') {
-                const filteredDepots = depots.filter((depot) => depot.username_associe === username);
+            if (role === "vendeuse") {
+                const filteredDepots = depots.filter(
+                    (depot) => depot.username_associe === username
+                );
                 setDepotList(filteredDepots);
                 if (filteredDepots.length > 0) {
                     setSelectedDepot(filteredDepots[0].id);
@@ -137,25 +159,25 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
         loadDepots();
     }, [role, username]);
 
-    // Recharger les stocks quand un dépôt est sélectionné ou quand une recherche est effectuée
     useEffect(() => {
         if (selectedDepot !== null) {
             fetchStock();
         }
     }, [selectedDepot]);
 
-    // Filtrer les produits par nom en fonction de la recherche
     const filteredProducts = productList.filter((product) => {
-        if (product.variations) {
-            return product.variations.some((variation) =>
-                variation.name.toLowerCase().includes(search.toLowerCase())
-            );
-        } else if (Array.isArray(product.stock)) {
-            return product.stock.some((item) =>
-                item.nom_produit.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-        return false;
+        if (search.trim() === "") return true;
+
+        const productName = product.name?.toLowerCase() || "";
+        const productSku = product.sku?.toLowerCase() || "";
+
+        return (
+            productName.includes(search.toLowerCase()) ||
+            productSku.includes(search.toLowerCase()) ||
+            product.stock?.some((item) =>
+                item.nom_produit?.toLowerCase().includes(search.toLowerCase())
+            )
+        );
     });
 
     return (
@@ -166,7 +188,7 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                     <h1 className="font-bold text-3xl">Listes des stocks</h1>
                 </div>
 
-                {role !== 'vendeuse' && (
+                {role !== "vendeuse" && (
                     <div className="ml-10 mt-4">
                         <select
                             value={selectedDepot ?? ""}
@@ -184,7 +206,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                         </select>
                     </div>
                 )}
-
                 <div className="ml-10 mt-4">
                     <input
                         type="text"
@@ -194,7 +215,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                         className="border border-gray-300 rounded-full p-2 w-full max-w-xs"
                     />
                 </div>
-
                 <div className="mt-10 ml-10 w-full max-w-4xl">
                     {loading ? (
                         <p className="text-center text-gray-500">Chargement des stocks...</p>
@@ -215,40 +235,20 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredProducts.length > 0 ? (
-                                        filteredProducts.map((product) =>
-                                            product.variations ? (
-                                                product.variations.map((variation) => (
-                                                    <tr key={variation.id} className="border-t">
-                                                        <td className="py-2 px-4">{variation.sku}</td>
-                                                        <td className="py-2 px-4">{variation.name}</td>
-                                                        <td className="py-2 px-4">
-                                                            {variation.stock_quantity !== null
-                                                                ? variation.stock_quantity
-                                                                : "Indisponible"}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : Array.isArray(product.stock) ? (
-                                                product.stock.map((item, index) => (
-                                                    <tr key={index} className="border-t">
-                                                        <td className="py-2 px-4">{item.sku}</td>
-                                                        <td className="py-2 px-4">{item.nom_produit}</td>
-                                                        <td className="py-2 px-4">{item.quantite}</td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan={3} className="py-4 text-center text-gray-500">
-                                                        Aucun stock disponible
-                                                    </td>
+                                    {productList.length > 0 ? (
+                                        productList.map((product, index) =>
+                                            product.stock?.map((item, stockIndex) => (
+                                                <tr key={`${product.id}-${stockIndex}`} className="border-t">
+                                                    <td className="py-2 px-4">{item.sku}</td>
+                                                    <td className="py-2 px-4">{item.nom_produit}</td>
+                                                    <td className="py-2 px-4">{item.quantite}</td>
                                                 </tr>
-                                            )
+                                            ))
                                         )
                                     ) : (
                                         <tr>
                                             <td colSpan={3} className="py-4 text-center text-gray-500">
-                                                Aucun produit trouvé
+                                                Aucun produit disponible
                                             </td>
                                         </tr>
                                     )}

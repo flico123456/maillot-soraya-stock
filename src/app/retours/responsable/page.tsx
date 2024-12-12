@@ -9,12 +9,18 @@ interface ProductEntry {
     name: string;
     sku: string;
     quantity: number;
-}
+}   
 
 interface Depot {
     id: number;
     name: string;
     localisation: string;
+    username_associe: string;
+}
+
+interface DepotStock {
+    id: number;
+    stock: string; // JSON string qui contient un tableau de ProductStock
 }
 
 interface ProductStock {
@@ -28,10 +34,10 @@ export default function Retours({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
-    const [loading, setLoading] = useState(false);
+    //const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
+    //const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
@@ -51,7 +57,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
             const depotsData = await response.json();
 
             // Trouver la localisation de l'utilisateur
-            const userDepot = depotsData.find((depot: any) => depot.username_associe === username);
+            const userDepot = depotsData.find((depot: Depot) => depot.username_associe === username);
             if (userDepot) {
                 setUserLocalisation(userDepot.localisation);
             }
@@ -68,14 +74,14 @@ export default function Retours({ children }: { children: React.ReactNode }) {
 
     // Récupérer tous les dépôts avec la même localisation
     const fetchDepotsByLocalisation = async () => {
-        setLoading(true);
+        //setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
 
             // Filtrer les dépôts qui partagent la même localisation que l'utilisateur
             const depotsWithSameLocalisation = depotsData.filter(
-                (depot: any) => depot.localisation === userLocalisation
+                (depot: Depot) => depot.localisation === userLocalisation
             );
 
             setDepots(depotsWithSameLocalisation);
@@ -85,7 +91,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération des dépôts.");
         } finally {
-            setLoading(false);
+            //setLoading(false);
         }
     };
 
@@ -95,65 +101,78 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         }
     }, [userLocalisation]);
 
-    const fetchProductsByDepot = async () => {
+    const fetchProductsByDepot = async (): Promise<ProductStock[][]> => {
         if (!selectedDepotId) {
             setError("Dépôt non trouvé.");
             return [];
         }
-
+    
         try {
             const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
-
-            const data = await response.json();
-            return data.map((item: any) => JSON.parse(item.stock) as ProductStock[]);
+    
+            if (!response.ok) {
+                throw new Error("Erreur lors de la récupération des produits du dépôt.");
+            }
+    
+            const data: DepotStock[] = await response.json();
+    
+            // Extraction des produits à partir du champ "stock" (convertir JSON string en tableau)
+            const stockItems: ProductStock[][] = data.map((item) =>
+                JSON.parse(item.stock) as ProductStock[]
+            );
+    
+            return stockItems;
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
         }
     };
+    
 
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
-
+    
         try {
             const stocks = await fetchProductsByDepot();
-            let foundProduct: ProductStock | null = null;
-            stocks.forEach((productArray: ProductStock[]) => {
-                const product = productArray.find((p) => p.sku === sku);
-                if (product) {
-                    foundProduct = product;
-                    setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
-                }
-            });
-
+    
+            // Trouver le produit correspondant au SKU
+            const foundProduct = stocks
+                .flatMap((productArray) => productArray) // Aplatir le tableau
+                .find((product) => product.sku === sku);
+    
             if (!foundProduct) {
                 setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
+                return; // Sortir si aucun produit n'est trouvé
+            }
+    
+            // Vérifier si le produit existe déjà dans la liste des produits
+            const existingProduct = products.find((p) => p.sku === foundProduct.sku);
+    
+            if (existingProduct) {
+                // Mettre à jour la quantité pour le produit existant
+                setProducts((prevProducts) =>
+                    prevProducts.map((p) =>
+                        p.sku === foundProduct.sku
+                            ? { ...p, quantity: p.quantity + 1 }
+                            : p
+                    )
+                );
             } else {
-                const existingProduct = products.find((p) => p.sku === foundProduct!.sku);
-                if (existingProduct) {
-                    setProducts((prevProducts) =>
-                        prevProducts.map((p) =>
-                            p.sku === foundProduct!.sku ? { ...p, quantity: p.quantity + 1 } : p
-                        )
-                    );
-                } else {
-                    setProducts((prevProducts) => [
-                        ...prevProducts,
-                        { name: foundProduct!.nom_produit, sku: foundProduct!.sku, quantity: 1 },
-                    ]);
-                }
+                // Ajouter le produit à la liste des produits
+                setProducts((prevProducts) => [
+                    ...prevProducts,
+                    { name: foundProduct.nom_produit, sku: foundProduct.sku, quantity: 1 },
+                ]);
             }
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
-        } finally {
-            setLoading(false);
         }
     };
+    
 
     const handleValidateRetour = async () => {
         if (!selectedDepotId || products.length === 0) {
@@ -209,7 +228,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({
                         sku: product.sku,
                         quantite: product.quantity, // Ajouter la quantité au stock (positif pour les retours)
-                        motif: selectedMotif,
+                        nom_produit: product.name,
                     }),
                 });
 

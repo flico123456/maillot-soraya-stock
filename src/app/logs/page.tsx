@@ -2,7 +2,6 @@
 
 import Layout from "@/app/components/Layout";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { generatePDF } from "../components/PdfGenerator";
 
 interface LogEntry {

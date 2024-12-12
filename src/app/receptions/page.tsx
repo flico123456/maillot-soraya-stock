@@ -23,8 +23,6 @@ export default function Reception({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<ProductEntry[]>([]); // État pour stocker la liste des produits ajoutés
     const [depots, setDepots] = useState<Depot[]>([]); // État pour stocker la liste des dépôts
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // État pour stocker l'ID du dépôt sélectionné
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
     const [showConfirmation, setShowConfirmation] = useState(false); // État pour gérer l'affichage de la boîte de dialogue de confirmation
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null); // Index pour la modification de la quantité
 
@@ -39,7 +37,6 @@ export default function Reception({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Erreur lors de la récupération des dépôts', error);
-            setError('Erreur lors de la récupération des dépôts');
         }
     };
 
@@ -49,8 +46,6 @@ export default function Reception({ children }: { children: React.ReactNode }) {
 
     // Fonction pour récupérer le produit en fonction du SKU
     const fetchProductBySku = async () => {
-        setLoading(true);
-        setError("");
 
         try {
             const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`, {
@@ -62,7 +57,7 @@ export default function Reception({ children }: { children: React.ReactNode }) {
             const data = await response.json();
 
             if (data.length === 0) {
-                setError("Aucun produit trouvé pour ce SKU.");
+                
             } else {
                 const productData = data[0];
                 const existingProduct = products.find((p) => p.sku === productData.sku);
@@ -83,16 +78,15 @@ export default function Reception({ children }: { children: React.ReactNode }) {
                 }
             }
         } catch (error) {
-            setError("Erreur lors de la récupération du produit.");
+            //setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
     // Fonction pour envoyer les produits au serveur pour insertion dans la base de données
     const sendProductsToDepot = async () => {
         if (!selectedDepotId) {
-            setError("Veuillez sélectionner un dépôt.");
+            //setError("Veuillez sélectionner un dépôt.");
             return;
         }
 
@@ -107,7 +101,7 @@ export default function Reception({ children }: { children: React.ReactNode }) {
                     });
                     const data = await response.json();
                     if (data.length === 0) {
-                        setError(`Produit avec SKU ${product.sku} non trouvé.`);
+                        //setError(`Produit avec SKU ${product.sku} non trouvé.`);
                         continue;
                     }
                     const productId = data[0].id;
@@ -171,7 +165,7 @@ export default function Reception({ children }: { children: React.ReactNode }) {
             setSku(""); // Réinitialiser le champ SKU
         } catch (error) {
             console.error('Erreur lors de l\'envoi des produits', error);
-            setError('Une erreur est survenue lors de l\'insertion des produits.');
+            //setError('Une erreur est survenue lors de l\'insertion des produits.');
         }
     };
 

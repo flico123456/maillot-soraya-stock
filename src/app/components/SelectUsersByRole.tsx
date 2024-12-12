@@ -28,8 +28,8 @@ export default function useVendeuseUsers() {
       } else {
         throw new Error('Erreur lors de la récupération des vendeuses');
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      console.log('error')
     } finally {
       setLoading(false); // Fin du chargement
     }
