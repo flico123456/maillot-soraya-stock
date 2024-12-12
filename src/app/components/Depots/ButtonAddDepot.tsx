@@ -8,6 +8,11 @@ interface ButtonAddDepotProps {
     onDepotAdded: () => void; // Propriété pour notifier le parent
 }
 
+interface VendeuseUser {
+    id: number;
+    name: string;
+}
+
 const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [name, setName] = useState('');
@@ -116,7 +121,7 @@ const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
                                             className="w-full p-1 border border-gray-300 rounded-full focus:outline-none focus:border-black transition"
                                         >
                                             <option value="">Sélectionner une vendeuse</option>
-                                            {vendeuseUsers.map((user: any) => (
+                                            {vendeuseUsers.map((user: VendeuseUser) => (
                                                 <option key={user.id} value={user.name}>
                                                     {user.name}
                                                 </option>

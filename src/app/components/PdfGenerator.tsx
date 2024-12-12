@@ -49,7 +49,7 @@ export const generatePDF = async (products: Product[], action: string, motif: st
         doc.text(`Dépôt: ${depotName}`, 14, 76);
 
         // Générer le tableau avec autoTable et personnaliser le style de l'en-tête
-        (doc as any).autoTable({
+        doc.autoTable({
             startY: 90,
             head: [['Nom du produit', 'SKU', 'Quantité']],
             body: products.map(product => [

@@ -3,8 +3,36 @@
 import Layout from "../../components/Layout";
 import { useEffect, useState } from "react";
 
+// Interfaces pour le typage
+interface Product {
+    id: number;
+    name: string;
+    sku: string;
+    variations?: Variation[];
+    stock?: StockItem[];
+}
+
+interface Variation {
+    id: number;
+    name: string;
+    sku: string;
+    stock_quantity: number | null;
+}
+
+interface StockItem {
+    sku: string;
+    nom_produit: string;
+    quantite: number;
+}
+
+interface Depot {
+    id: number;
+    name: string;
+    username_associe?: string;
+}
+
 // Fonction pour récupérer les produits classiques et variables depuis l'API custom
-const fetchProducts = async () => {
+const fetchProducts = async (): Promise<Product[]> => {
     try {
         const response = await fetch(
             `https://maillotsoraya-conception.com/wp-json/customAPI/v1/getAllProductClassique`,
@@ -22,7 +50,7 @@ const fetchProducts = async () => {
 };
 
 // Fonction pour récupérer les stocks depuis l'API locale
-const fetchLocalStock = async (depotId: number) => {
+const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
     try {
         const response = await fetch(
             `http://localhost:3001/stock_by_depot/select/${depotId}`,
@@ -41,7 +69,7 @@ const fetchLocalStock = async (depotId: number) => {
 };
 
 // Fonction pour récupérer la liste des dépôts
-const fetchDepots = async () => {
+const fetchDepots = async (): Promise<Depot[]> => {
     try {
         const response = await fetch("http://localhost:3001/depots/select");
         return await response.json();
@@ -52,11 +80,11 @@ const fetchDepots = async () => {
 };
 
 export default function ListeDesStock({ children }: { children: React.ReactNode }) {
-    const [productList, setProductList] = useState<any[]>([]);
-    const [depotList, setDepotList] = useState<any[]>([]);
+    const [productList, setProductList] = useState<Product[]>([]);
+    const [depotList, setDepotList] = useState<Depot[]>([]);
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState(""); // Champ de recherche
+    const [search, setSearch] = useState("");
 
     const [role, setRole] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
@@ -74,22 +102,16 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
         setLoading(true);
         try {
             if (selectedDepot === 1) {
-                // Si Saint-Cannat (depot_id = 1 par exemple)
                 const products = await fetchProducts();
                 setProductList(products);
             } else if (selectedDepot !== null) {
-                // Si un autre dépôt est sélectionné
                 const localStock = await fetchLocalStock(selectedDepot);
-
-                // Analyser le champ 'stock' pour chaque élément
-                const processedStock = localStock.map((item: any) => {
-                    return {
-                        ...item,
-                        stock: JSON.parse(item.stock), // Parsing du champ 'stock'
-                    };
-                });
-
-                setProductList(processedStock);
+                setProductList(localStock.map((item) => ({
+                    id: 0, // Remplir avec un identifiant fictif si nécessaire
+                    name: "",
+                    sku: item.sku,
+                    stock: [item],
+                })));
             }
         } catch (error) {
             console.error("Erreur lors de la récupération des stocks :", error);
@@ -102,16 +124,14 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
     useEffect(() => {
         const loadDepots = async () => {
             const depots = await fetchDepots();
-
-            // Si l'utilisateur est une vendeuse, filtrer le dépôt correspondant
             if (role === 'vendeuse') {
-                const filteredDepots = depots.filter((depot: any) => depot.username_associe === username);
+                const filteredDepots = depots.filter((depot) => depot.username_associe === username);
                 setDepotList(filteredDepots);
                 if (filteredDepots.length > 0) {
-                    setSelectedDepot(filteredDepots[0].id); // Sélectionner automatiquement le dépôt associé
+                    setSelectedDepot(filteredDepots[0].id);
                 }
             } else {
-                setDepotList(depots); // Afficher tous les dépôts pour les autres rôles
+                setDepotList(depots);
             }
         };
         loadDepots();
@@ -127,13 +147,11 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
     // Filtrer les produits par nom en fonction de la recherche
     const filteredProducts = productList.filter((product) => {
         if (product.variations) {
-            // Pour les produits avec variations
-            return product.variations.some((variation: any) =>
+            return product.variations.some((variation) =>
                 variation.name.toLowerCase().includes(search.toLowerCase())
             );
         } else if (Array.isArray(product.stock)) {
-            // Pour les stocks locaux
-            return product.stock.some((item: any) =>
+            return product.stock.some((item) =>
                 item.nom_produit.toLowerCase().includes(search.toLowerCase())
             );
         }
@@ -142,14 +160,12 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>;
+            <Layout>{children}</Layout>
             <div className="ml-64 p-8 w-full">
-                {/* Titre de la page */}
                 <div className="mt-10 ml-10">
                     <h1 className="font-bold text-3xl">Listes des stocks</h1>
                 </div>
 
-                {/* Sélecteur de dépôt uniquement visible pour les rôles autres que vendeuse */}
                 {role !== 'vendeuse' && (
                     <div className="ml-10 mt-4">
                         <select
@@ -160,7 +176,7 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                             <option value="" disabled>
                                 Sélectionner un dépôt
                             </option>
-                            {depotList.map((depot: any) => (
+                            {depotList.map((depot) => (
                                 <option key={depot.id} value={depot.id}>
                                     {depot.name}
                                 </option>
@@ -169,7 +185,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                     </div>
                 )}
 
-                {/* Champ de recherche pour filtrer par nom de produit */}
                 <div className="ml-10 mt-4">
                     <input
                         type="text"
@@ -180,7 +195,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                     />
                 </div>
 
-                {/* Tableau des produits et variations */}
                 <div className="mt-10 ml-10 w-full max-w-4xl">
                     {loading ? (
                         <p className="text-center text-gray-500">Chargement des stocks...</p>
@@ -202,9 +216,9 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                                 </thead>
                                 <tbody>
                                     {filteredProducts.length > 0 ? (
-                                        filteredProducts.map((product: any) =>
+                                        filteredProducts.map((product) =>
                                             product.variations ? (
-                                                product.variations.map((variation: any) => (
+                                                product.variations.map((variation) => (
                                                     <tr key={variation.id} className="border-t">
                                                         <td className="py-2 px-4">{variation.sku}</td>
                                                         <td className="py-2 px-4">{variation.name}</td>
@@ -216,21 +230,16 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                                                     </tr>
                                                 ))
                                             ) : Array.isArray(product.stock) ? (
-                                                product.stock.map(
-                                                    (item: any, index: number) => (
-                                                        <tr key={index} className="border-t">
-                                                            <td className="py-2 px-4">{item.sku}</td>
-                                                            <td className="py-2 px-4">{item.nom_produit}</td>
-                                                            <td className="py-2 px-4">{item.quantite}</td>
-                                                        </tr>
-                                                    )
-                                                )
+                                                product.stock.map((item, index) => (
+                                                    <tr key={index} className="border-t">
+                                                        <td className="py-2 px-4">{item.sku}</td>
+                                                        <td className="py-2 px-4">{item.nom_produit}</td>
+                                                        <td className="py-2 px-4">{item.quantite}</td>
+                                                    </tr>
+                                                ))
                                             ) : (
                                                 <tr>
-                                                    <td
-                                                        colSpan={4}
-                                                        className="py-4 text-center text-gray-500"
-                                                    >
+                                                    <td colSpan={3} className="py-4 text-center text-gray-500">
                                                         Aucun stock disponible
                                                     </td>
                                                 </tr>
@@ -238,10 +247,7 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                                         )
                                     ) : (
                                         <tr>
-                                            <td
-                                                colSpan={4}
-                                                className="py-4 text-center text-gray-500"
-                                            >
+                                            <td colSpan={3} className="py-4 text-center text-gray-500">
                                                 Aucun produit trouvé
                                             </td>
                                         </tr>
