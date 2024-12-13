@@ -2,7 +2,6 @@
 
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
-import { generatePDF } from "../../components/PdfGenerator"; // Import de la fonction pour générer le PDF
 import Image from "next/image";
 
 interface ProductEntry {
@@ -198,9 +197,6 @@ export default function Sorties() {
             setProducts([]);
             setSku("");
             setShowMotifModal(false);
-
-            const depotName = depot?.name || "Dépôt inconnu";
-            generatePDF(products, action, selectedMotif, depotName, '/logo-soraya.png'); // Appel direct pour générer le PDF
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des sorties.");

@@ -3,7 +3,6 @@
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image"; // Import de Next.js Image
-import { generatePDF } from "../components/PdfGenerator";
 
 interface ProductEntry {
     name: string;
@@ -222,8 +221,6 @@ export default function Reception() {
     const confirmReception = () => {
         sendProductsToDepot(); // Envoie les produits au serveur
         setShowConfirmation(false); // Ferme la boîte de dialogue après confirmation
-        const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
-        generatePDF(products, "Réception", "-", depotName, '/logo-soraya.png'); // Générer le PDF après validation
     };
 
     return (

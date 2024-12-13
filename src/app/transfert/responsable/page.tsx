@@ -2,7 +2,6 @@
 
 import Layout from "@/app/components/Layout";
 import { useState, useEffect } from "react";
-import { generatePDF } from "../../components/PdfGenerator"; // Import de la fonction pour générer le PDF
 
 
 interface Depot {
@@ -233,10 +232,6 @@ export default function TransfertResponsable() {
             });
 
             // Générer le PDF après validation
-            const depotSourceName = depots.find((d) => d.id === depotSourceId)?.name || "Dépôt inconnu";
-            const depotDestinationName = depots.find((d) => d.id === depotDestinationId)?.name || "Dépôt inconnu";
-            generatePDF(products, "Transfert", "-", `${depotSourceName} vers ${depotDestinationName}`, '/logo-soraya.png');
-
             alert("Transfert validé avec succès.");
             setProducts([]);
             setSku("");

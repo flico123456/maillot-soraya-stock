@@ -2,7 +2,6 @@
 
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
-import { generatePDF } from "../../components/PdfGenerator"; // Import de la fonction pour générer le PDF
 import Image from "next/image";
 
 interface ProductEntry {
@@ -244,9 +243,6 @@ export default function Retours() {
             setProducts([]);
             setSku("");
             setShowMotifModal(false);
-
-            const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
-            generatePDF(products, "Retour de stock", selectedMotif, depotName, '/logo-soraya.png'); // Générer le PDF après validation
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des retours.");
