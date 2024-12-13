@@ -1,18 +1,12 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+
+autoTable(jsPDF, {});
 
 interface Product {
     name: string;
     sku: string;
     quantity: number;
-}
-
-interface PdfGeneratorProps {
-    products: Product[];
-    motif: string;
-    action: string;
-    depotName: string;
-    logoUrl: string;
 }
 
 // Fonction pour convertir une image en Base64
@@ -49,7 +43,7 @@ export const generatePDF = async (products: Product[], action: string, motif: st
         doc.text(`Dépôt: ${depotName}`, 14, 76);
 
         // Générer le tableau avec autoTable et personnaliser le style de l'en-tête
-        doc.autoTable({
+        autoTable(doc, {
             startY: 90,
             head: [['Nom du produit', 'SKU', 'Quantité']],
             body: products.map(product => [

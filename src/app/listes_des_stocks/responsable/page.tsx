@@ -93,7 +93,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
 
     // Récupérer le rôle et le nom d'utilisateur depuis le localStorage
     useEffect(() => {
-        const storedRole = localStorage.getItem("role");
         const storedUsername = localStorage.getItem("username");
         setUsername(storedUsername);
     }, []);
