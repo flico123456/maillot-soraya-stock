@@ -13,7 +13,7 @@ interface Depot {
     username_associe?: string;
 }
 
-export default function Depot({ children }: { children: React.ReactNode }) {
+export default function Depot() {
     const [depotList, setDepotList] = useState<Depot[]>([]); // Typage explicite des dépôts
     const [loading, setLoading] = useState(true); // Pour afficher un indicateur de chargement
 
@@ -43,59 +43,60 @@ export default function Depot({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>;
-            <div className="ml-64 p-8 w-full">
-                {/* Titre de la page */}
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Dépôts</h1>
-                </div>
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    {/* Titre de la page */}
+                    <div className="mt-10 ml-10">
+                        <h1 className="font-bold text-3xl">Dépôts</h1>
+                    </div>
 
-                <div className="flex mt-10 ml-10">
-                    {/* Tableau pour afficher les dépôts */}
-                    <div className="w-3/4">
-                        {loading ? (
-                            <p className="text-center text-gray-500">Chargement des dépôts...</p>
-                        ) : (
-                            <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                                <thead>
-                                    <tr>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">ID</th>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du dépôt</th>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Localisation</th>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Dépôt associé</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {depotList.length > 0 ? (
-                                        depotList.map((depot) => (
-                                            <tr key={depot.id} className="border-t">
-                                                <td className="py-2 px-4">{depot.id}</td>
-                                                <td className="py-2 px-4">{depot.name}</td>
-                                                <td className="py-2 px-4">{depot.localisation}</td>
-                                                <td className="py-2 px-4">{depot.username_associe || "Non assigné"}</td>
-                                            </tr>
-                                        ))
-                                    ) : (
+                    <div className="flex mt-10 ml-10">
+                        {/* Tableau pour afficher les dépôts */}
+                        <div className="w-3/4">
+                            {loading ? (
+                                <p className="text-center text-gray-500">Chargement des dépôts...</p>
+                            ) : (
+                                <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                    <thead>
                                         <tr>
-                                            <td colSpan={4} className="py-4 text-center text-gray-500">
-                                                Aucun dépôt disponible
-                                            </td>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">ID</th>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du dépôt</th>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Localisation</th>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Dépôt associé</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {depotList.length > 0 ? (
+                                            depotList.map((depot) => (
+                                                <tr key={depot.id} className="border-t">
+                                                    <td className="py-2 px-4">{depot.id}</td>
+                                                    <td className="py-2 px-4">{depot.name}</td>
+                                                    <td className="py-2 px-4">{depot.localisation}</td>
+                                                    <td className="py-2 px-4">{depot.username_associe || "Non assigné"}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="py-4 text-center text-gray-500">
+                                                    Aucun dépôt disponible
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
 
-                    {/* Boutons pour ajouter, modifier, supprimer */}
-                    <div className="ml-10 mt-20 flex flex-col space-y-4">
-                        {/* Passer la fonction refreshDepots comme prop à ButtonAddDepot */}
-                        <ButtonAddDepot onDepotAdded={refreshDepots} />
-                        <ButtonEditDepot onDepotUpdated={refreshDepots} />
-                        <ButtonDeleteDepot onDepotDeleted={refreshDepots} />
+                        {/* Boutons pour ajouter, modifier, supprimer */}
+                        <div className="ml-10 mt-20 flex flex-col space-y-4">
+                            {/* Passer la fonction refreshDepots comme prop à ButtonAddDepot */}
+                            <ButtonAddDepot onDepotAdded={refreshDepots} />
+                            <ButtonEditDepot onDepotUpdated={refreshDepots} />
+                            <ButtonDeleteDepot onDepotDeleted={refreshDepots} />
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Layout>
         </div>
     );
 }
