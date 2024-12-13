@@ -15,12 +15,14 @@ interface Depot {
     id: number;
     name: string;
     localisation: string;
+    username_associe: string;
 }
 
 interface ProductStock {
     nom_produit: string;
     sku: string;
     quantite: number;
+    stock: string;
 }
 
 export default function Sorties({ children }: { children: React.ReactNode }) {
@@ -28,7 +30,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
     const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
@@ -50,7 +51,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
-            const userDepot = depotsData.find((depot: any) => depot.username_associe === username);
+            const userDepot = depotsData.find((depot: Depot) => depot.username_associe === username);
             if (userDepot) {
                 setUserLocalisation(userDepot.localisation);
             }
@@ -67,13 +68,12 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
 
     // Récupérer tous les dépôts avec la même localisation
     const fetchDepotsByLocalisation = async () => {
-        setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
 
             const depotsWithSameLocalisation = depotsData.filter(
-                (depot: any) => depot.localisation === userLocalisation
+                (depot: Depot) => depot.localisation === userLocalisation
             );
 
             setDepots(depotsWithSameLocalisation);
@@ -83,7 +83,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération des dépôts.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -98,7 +97,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
             setError("Dépôt non trouvé.");
             return [];
         }
-
         try {
             const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
                 headers: {
@@ -107,7 +105,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
             });
 
             const data = await response.json();
-            return data.map((item: any) => JSON.parse(item.stock) as ProductStock[]);
+            return data.map((item: ProductStock) => JSON.parse(item.stock) as ProductStock[]);
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
@@ -115,9 +113,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     };
 
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
-
         try {
             const stocks = await fetchProductsByDepot();
             let foundProduct: ProductStock | null = null;
@@ -149,7 +145,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -215,6 +210,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({
                         sku: product.sku,
                         quantite: product.quantity * -1, // Soustraire la quantité pour une sortie
+                        nom_produit: product.name,
                     }),
                 });
 

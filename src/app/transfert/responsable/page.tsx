@@ -9,12 +9,20 @@ interface Depot {
     id: number;
     name: string;
     localisation: string;
+    username_associe: string;
 }
 
 interface ProductStock {
     nom_produit: string;
     sku: string;
     quantite: number;
+}
+
+interface Product {
+    name: string;
+    sku: string;
+    quantity: number;
+    stock: string;
 }
 
 interface ProductEntry {
@@ -30,9 +38,7 @@ export default function TransfertResponsable({ children }: { children: React.Rea
     const [depots, setDepots] = useState<Depot[]>([]);
     const [depotSourceId, setDepotSourceId] = useState<number | null>(null);
     const [depotDestinationId, setDepotDestinationId] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
 
     const [username, setUsername] = useState<string | null>(null);
     const [userLocalisation, setUserLocalisation] = useState<string | null>(null);
@@ -48,7 +54,7 @@ export default function TransfertResponsable({ children }: { children: React.Rea
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
-            const userDepot = depotsData.find((depot: any) => depot.username_associe === username);
+            const userDepot = depotsData.find((depot: Depot) => depot.username_associe === username);
             if (userDepot) {
                 setUserLocalisation(userDepot.localisation);
             }
@@ -65,18 +71,16 @@ export default function TransfertResponsable({ children }: { children: React.Rea
 
     // Récupérer tous les dépôts avec la même localisation
     const fetchDepotsByLocalisation = async () => {
-        setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
             const depotsWithSameLocalisation = depotsData.filter(
-                (depot: any) => depot.localisation === userLocalisation
+                (depot: Depot) => depot.localisation === userLocalisation
             );
             setDepots(depotsWithSameLocalisation);
         } catch (error) {
             setError("Erreur lors de la récupération des dépôts.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -96,7 +100,7 @@ export default function TransfertResponsable({ children }: { children: React.Rea
             });
 
             const data = await response.json();
-            const products: ProductStock[] = data.map((item: any) => JSON.parse(item.stock)).flat();
+            const products: ProductStock[] = data.map((item: Product) => JSON.parse(item.stock)).flat();
             return products;
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
@@ -111,7 +115,6 @@ export default function TransfertResponsable({ children }: { children: React.Rea
             return;
         }
 
-        setLoading(true);
         setError("");
 
         try {
@@ -121,7 +124,6 @@ export default function TransfertResponsable({ children }: { children: React.Rea
             stocks.forEach((product: ProductStock) => {
                 if (product.sku === sku) {
                     foundProduct = product;
-                    setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
                 }
             });
 
@@ -147,7 +149,6 @@ export default function TransfertResponsable({ children }: { children: React.Rea
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 

@@ -14,19 +14,20 @@ interface ProductEntry {
 interface Depot {
     id: number;
     name: string;
+    username_associe: string;
 }
 
 interface ProductStock {
     nom_produit: string;
     sku: string;
     quantite: number;
+    stock: string;
 }
 
 export default function Sorties({ children }: { children: React.ReactNode }) {
     const [sku, setSku] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depot, setDepot] = useState<Depot | null>(null);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
     const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
@@ -43,17 +44,15 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     }, []);
 
     const fetchDepotByUsername = async () => {
-        setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depots = await response.json();
 
-            const userDepot = depots.find((depot: any) => depot.username_associe === username);
+            const userDepot = depots.find((depot: Depot) => depot.username_associe === username);
             setDepot(userDepot);
         } catch (error) {
             setError("Erreur lors de la récupération du dépôt.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -77,7 +76,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
             });
 
             const data = await response.json();
-            return data.map((item: any) => JSON.parse(item.stock) as ProductStock[]);
+            return data.map((item: ProductStock) => JSON.parse(item.stock) as ProductStock[]);
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
@@ -85,7 +84,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     };
 
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
 
         try {
@@ -119,7 +117,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -161,7 +158,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                 }),
             });
 
-            const result = await response.json();
             if (!response.ok) {
                 setError("Erreur lors de la création du log.");
             }
@@ -186,11 +182,10 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({
                         sku: product.sku,
                         quantite: product.quantity * -1,
-                        motif: selectedMotif,
+                        nom_produit: product.name,
                     }),
                 });
 
-                const result = await response.json();
                 if (!response.ok) {
                     setError(`Erreur lors de la mise à jour du produit ${product.sku}.`);
                     continue;

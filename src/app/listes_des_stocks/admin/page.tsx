@@ -165,21 +165,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
         }
     }, [selectedDepot]);
 
-    const filteredProducts = productList.filter((product) => {
-        if (search.trim() === "") return true;
-
-        const productName = product.name?.toLowerCase() || "";
-        const productSku = product.sku?.toLowerCase() || "";
-
-        return (
-            productName.includes(search.toLowerCase()) ||
-            productSku.includes(search.toLowerCase()) ||
-            product.stock?.some((item) =>
-                item.nom_produit?.toLowerCase().includes(search.toLowerCase())
-            )
-        );
-    });
-
     return (
         <div className="flex min-h-screen bg-gray-200">
             <Layout>{children}</Layout>
@@ -236,7 +221,7 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
                                 </thead>
                                 <tbody>
                                     {productList.length > 0 ? (
-                                        productList.map((product, index) =>
+                                        productList.map((product) =>
                                             product.stock?.map((item, stockIndex) => (
                                                 <tr key={`${product.id}-${stockIndex}`} className="border-t">
                                                     <td className="py-2 px-4">{item.sku}</td>

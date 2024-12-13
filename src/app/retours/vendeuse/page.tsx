@@ -11,6 +11,18 @@ interface ProductEntry {
     quantity: number;
 }
 
+interface DepotStock {
+    id: number;
+    stock: string; // JSON string qui contient un tableau de ProductStock
+}
+
+interface Depot {
+    id: number;
+    name: string;
+    localisation: string;
+    username_associe: string;
+}
+
 interface Depot {
     id: number;
     name: string;
@@ -26,10 +38,8 @@ export default function Retours({ children }: { children: React.ReactNode }) {
     const [sku, setSku] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depot, setDepot] = useState<Depot | null>(null);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
@@ -43,17 +53,15 @@ export default function Retours({ children }: { children: React.ReactNode }) {
     }, []);
 
     const fetchDepotByUsername = async () => {
-        setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depots = await response.json();
 
-            const userDepot = depots.find((depot: any) => depot.username_associe === username);
+            const userDepot = depots.find((depot : Depot) => depot.username_associe === username);
             setDepot(userDepot);
         } catch (error) {
             setError("Erreur lors de la récupération du dépôt.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -63,21 +71,31 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         }
     }, [username]);
 
-    const fetchProductsByDepot = async () => {
+    const fetchProductsByDepot = async (): Promise<ProductStock[][]> => {
         if (!depot) {
             setError("Dépôt non trouvé.");
             return [];
         }
-
+    
         try {
             const response = await fetch(`http://localhost:3001/stock_by_depot/select/${depot.id}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
-
-            const data = await response.json();
-            return data.map((item: any) => JSON.parse(item.stock) as ProductStock[]);
+    
+            if (!response.ok) {
+                throw new Error("Erreur lors de la récupération des produits du dépôt.");
+            }
+    
+            const data: DepotStock[] = await response.json();
+    
+            // Extraction des produits à partir du champ "stock" (convertir JSON string en tableau)
+            const stockItems: ProductStock[][] = data.map((item) =>
+                JSON.parse(item.stock) as ProductStock[]
+            );
+    
+            return stockItems;
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
@@ -85,7 +103,6 @@ export default function Retours({ children }: { children: React.ReactNode }) {
     };
 
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
 
         try {
@@ -95,7 +112,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                 const product = productArray.find((p) => p.sku === sku);
                 if (product) {
                     foundProduct = product;
-                    setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
+                    //setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
                 }
             });
 
@@ -119,7 +136,6 @@ export default function Retours({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -153,7 +169,6 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                 }),
             });
 
-            const result = await response.json();
             if (!response.ok) {
                 setError("Erreur lors de la création du log.");
             }
@@ -178,11 +193,10 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({
                         sku: product.sku,
                         quantite: product.quantity, // Ajouter la quantité au stock (positif pour les retours)
-                        motif: selectedMotif,
+                        nom_produit: product.name,
                     }),
                 });
 
-                const result = await response.json();
                 if (!response.ok) {
                     setError(`Erreur lors de la mise à jour du produit ${product.sku}.`);
                     continue;

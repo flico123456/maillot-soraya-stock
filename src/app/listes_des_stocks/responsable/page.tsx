@@ -88,7 +88,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
-    const [role, setRole] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
     const [userLocalisation, setUserLocalisation] = useState<string | null>(null);
 
@@ -96,7 +95,6 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
     useEffect(() => {
         const storedRole = localStorage.getItem("role");
         const storedUsername = localStorage.getItem("username");
-        setRole(storedRole);
         setUsername(storedUsername);
     }, []);
 

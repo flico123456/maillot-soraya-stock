@@ -8,6 +8,7 @@ interface Depot {
     id: number;
     name: string;
     localisation: string;
+    stock: string;
 }
 
 interface ProductStock {
@@ -31,11 +32,7 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
     const [depots, setDepots] = useState<Depot[]>([]);
     const [depotSourceId, setDepotSourceId] = useState<number | null>(null);
     const [depotDestinationId, setDepotDestinationId] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
-
-    const [username, setUsername] = useState<string | null>(null);
 
     // Fonction pour mettre à jour la quantité d'un produit dans le tableau
     const updateQuantity = (index: number, newQuantity: number) => {
@@ -49,15 +46,8 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
         setProducts(products.filter((product) => product.sku !== sku));
     };
 
-    // Récupérer le nom d'utilisateur depuis le localStorage
-    useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
-        setUsername(storedUsername);
-    }, []);
-
     // Récupérer tous les dépôts (sans restriction)
     const fetchAllDepots = async () => {
-        setLoading(true);
         try {
             const response = await fetch('http://localhost:3001/depots/select');
             const depotsData = await response.json();
@@ -65,7 +55,6 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
         } catch (error) {
             setError("Erreur lors de la récupération des dépôts.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -107,7 +96,7 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
                 },
             });
             const data = await response.json();
-            const products: ProductStock[] = data.map((item: any) => JSON.parse(item.stock)).flat();
+            const products: ProductStock[] = data.map((item: Depot) => JSON.parse(item.stock)).flat();
             return products;
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
@@ -122,7 +111,6 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
             return;
         }
 
-        setLoading(true);
         setError("");
 
         try {
@@ -137,7 +125,6 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
                         sku: wooProduct.sku,
                         quantite: wooProduct.quantity,
                     };
-                    setAvailableStock((prev) => ({ ...prev, [wooProduct.sku]: wooProduct.quantity }));
                 }
             } else {
                 // Sinon, utiliser l'API locale
@@ -145,7 +132,6 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
                 stocks.forEach((product: ProductStock) => {
                     if (product.sku === sku) {
                         foundProduct = product;
-                        setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
                     }
                 });
             }
@@ -172,7 +158,6 @@ export default function TransfertAdmin({ children }: { children: React.ReactNode
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 

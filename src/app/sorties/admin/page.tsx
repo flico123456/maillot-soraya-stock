@@ -17,10 +17,17 @@ interface Depot {
     localisation: string;
 }
 
+interface Product {
+    name: string;
+    sku: string;
+    stock_quantity: number;
+}
+
 interface ProductStock {
     nom_produit: string;
     sku: string;
     quantite: number;
+    stock: string;
 }
 
 const SAINT_CANNAT_ID = 1; // ID de Saint-Cannat
@@ -30,7 +37,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
     const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
@@ -38,14 +44,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
     const action = "Sortie de stock"; // Action pour le PDF
-
-    const [username, setUsername] = useState<string | null>(null);
-    const [userLocalisation, setUserLocalisation] = useState<string | null>(null); // Localisation de l'utilisateur
-
-    useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
-        setUsername(storedUsername);
-    }, []);
 
     // Fonction pour récupérer tous les dépôts sans filtre
     const fetchAllDepots = async () => {
@@ -94,7 +92,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                     setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
                     return [];
                 }
-                return data.map((product: any) => ({
+                return data.map((product: Product) => ({
                     nom_produit: product.name,
                     sku: product.sku,
                     quantite: product.stock_quantity,
@@ -118,7 +116,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                 }
 
                 // Extraction des produits à partir du champ "stock" (qui est un tableau JSON dans ta base de données)
-                const stockItems = data.flatMap((item: any) => JSON.parse(item.stock) as ProductStock[]);
+                const stockItems = data.flatMap((item: ProductStock) => JSON.parse(item.stock) as ProductStock[]);
 
                 return stockItems;
             }
@@ -130,7 +128,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
 
 
     const fetchProductBySku = async () => {
-        setLoading(true);
         setError("");
 
         try {
@@ -164,7 +161,6 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
         } finally {
-            setLoading(false);
         }
     };
 
@@ -260,6 +256,7 @@ export default function Sorties({ children }: { children: React.ReactNode }) {
                         body: JSON.stringify({
                             sku: product.sku,
                             quantite: product.quantity * -1, // Soustraire la quantité pour une sortie
+                            nom_produit: product.name,
                         }),
                     });
 
