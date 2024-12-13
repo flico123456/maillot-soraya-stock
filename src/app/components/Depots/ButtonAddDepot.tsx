@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import useVendeuseUsers from '../SelectUsersByRole';// Importer le hook qui récupère uniquement les vendeuses
+import { useState } from "react";
+import Image from "next/image";
+import useVendeuseUsers from "../SelectUsersByRole"; // Importer le hook qui récupère uniquement les vendeuses
 
 interface ButtonAddDepotProps {
     onDepotAdded: () => void; // Propriété pour notifier le parent
@@ -15,11 +15,12 @@ interface VendeuseUser {
 
 const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [name, setName] = useState('');
-    const [localisation, setLocation] = useState('');
-    const [selectedUser, setSelectedUser] = useState(''); // Stocker l'utilisateur sélectionné
+    const [name, setName] = useState("");
+    const [localisation, setLocation] = useState("");
+    const [selectedUser, setSelectedUser] = useState(""); // Stocker l'utilisateur sélectionné
 
-    const { vendeuseUsers, loading, error } = useVendeuseUsers(); // Utiliser uniquement les vendeuses
+    // Supposons que le hook retourne seulement vendeuseUsers et loading
+    const { vendeuseUsers, loading } = useVendeuseUsers(); // Utiliser uniquement les vendeuses
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
@@ -27,10 +28,10 @@ const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const response = await fetch('http://localhost:3001/depots/create', {
-            method: 'POST',
+        const response = await fetch("http://localhost:3001/depots/create", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
                 name: name,
@@ -40,13 +41,12 @@ const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
         });
 
         if (!response.ok) {
-            // Si le serveur retourne une réponse non "ok" (erreur 4xx ou 5xx)
-            console.error('Erreur lors de la création du dépôt :', response.statusText);
+            console.error("Erreur lors de la création du dépôt :", response.statusText);
             return;
         }
 
         const data = await response.json();
-        console.log('Dépôt créé avec succès :', data);
+        console.log("Dépôt créé avec succès :", data);
 
         // Notifier le parent que le dépôt a été ajouté
         onDepotAdded();
@@ -111,8 +111,6 @@ const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
                                     </label>
                                     {loading ? (
                                         <p>Chargement des vendeuses...</p>
-                                    ) : error ? (
-                                        <p className="text-red-500">Erreur : {error}</p>
                                     ) : (
                                         <select
                                             id="associated-user"
