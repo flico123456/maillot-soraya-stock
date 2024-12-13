@@ -267,7 +267,7 @@ export default function Retours() {
             setSku("");
             setShowMotifModal(false);
 
-            const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
+            //const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
             //generatePDF(products, "Retour de stock", selectedMotif, depotName, '/logo-soraya.png'); // Générer le PDF après validation
 
         } catch (error) {
