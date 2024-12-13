@@ -100,7 +100,3 @@ export default function Depot() {
         </div>
     );
 }
-
-export async function getServerSideProps() {
-    return { props: {} }; // Force le rendu côté client uniquement
-}
