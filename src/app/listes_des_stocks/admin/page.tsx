@@ -91,7 +91,7 @@ const fetchDepots = async (): Promise<Depot[]> => {
     }
 };
 
-export default function ListeDesStock({ children }: { children: React.ReactNode }) {
+export default function ListeDesStock() {
     const [productList, setProductList] = useState<Product[]>([]);
     const [depotList, setDepotList] = useState<Depot[]>([]);
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
@@ -167,82 +167,83 @@ export default function ListeDesStock({ children }: { children: React.ReactNode 
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>
-            <div className="ml-64 p-8 w-full">
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Listes des stocks</h1>
-                </div>
-
-                {role !== "vendeuse" && (
-                    <div className="ml-10 mt-4">
-                        <select
-                            value={selectedDepot ?? ""}
-                            onChange={(e) => setSelectedDepot(Number(e.target.value))}
-                            className="border border-gray-300 rounded-full p-2 mt-2 w-56"
-                        >
-                            <option value="" disabled>
-                                Sélectionner un dépôt
-                            </option>
-                            {depotList.map((depot) => (
-                                <option key={depot.id} value={depot.id}>
-                                    {depot.name}
-                                </option>
-                            ))}
-                        </select>
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    <div className="mt-10 ml-10">
+                        <h1 className="font-bold text-3xl">Listes des stocks</h1>
                     </div>
-                )}
-                <div className="ml-10 mt-4">
-                    <input
-                        type="text"
-                        placeholder="Rechercher un produit"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border border-gray-300 rounded-full p-2 w-full max-w-xs"
-                    />
-                </div>
-                <div className="mt-10 ml-10 w-full max-w-4xl">
-                    {loading ? (
-                        <p className="text-center text-gray-500">Chargement des stocks...</p>
-                    ) : (
-                        <div className="max-h-600 overflow-y-scroll">
-                            <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg">
-                                <thead>
-                                    <tr>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
-                                            SKU
-                                        </th>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
-                                            Nom du produit
-                                        </th>
-                                        <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
-                                            Stock
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {productList.length > 0 ? (
-                                        productList.map((product) =>
-                                            product.stock?.map((item, stockIndex) => (
-                                                <tr key={`${product.id}-${stockIndex}`} className="border-t">
-                                                    <td className="py-2 px-4">{item.sku}</td>
-                                                    <td className="py-2 px-4">{item.nom_produit}</td>
-                                                    <td className="py-2 px-4">{item.quantite}</td>
-                                                </tr>
-                                            ))
-                                        )
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={3} className="py-4 text-center text-gray-500">
-                                                Aucun produit disponible
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+
+                    {role !== "vendeuse" && (
+                        <div className="ml-10 mt-4">
+                            <select
+                                value={selectedDepot ?? ""}
+                                onChange={(e) => setSelectedDepot(Number(e.target.value))}
+                                className="border border-gray-300 rounded-full p-2 mt-2 w-56"
+                            >
+                                <option value="" disabled>
+                                    Sélectionner un dépôt
+                                </option>
+                                {depotList.map((depot) => (
+                                    <option key={depot.id} value={depot.id}>
+                                        {depot.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     )}
+                    <div className="ml-10 mt-4">
+                        <input
+                            type="text"
+                            placeholder="Rechercher un produit"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="border border-gray-300 rounded-full p-2 w-full max-w-xs"
+                        />
+                    </div>
+                    <div className="mt-10 ml-10 w-full max-w-4xl">
+                        {loading ? (
+                            <p className="text-center text-gray-500">Chargement des stocks...</p>
+                        ) : (
+                            <div className="max-h-600 overflow-y-scroll">
+                                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg">
+                                    <thead>
+                                        <tr>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
+                                                SKU
+                                            </th>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
+                                                Nom du produit
+                                            </th>
+                                            <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">
+                                                Stock
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {productList.length > 0 ? (
+                                            productList.map((product) =>
+                                                product.stock?.map((item, stockIndex) => (
+                                                    <tr key={`${product.id}-${stockIndex}`} className="border-t">
+                                                        <td className="py-2 px-4">{item.sku}</td>
+                                                        <td className="py-2 px-4">{item.nom_produit}</td>
+                                                        <td className="py-2 px-4">{item.quantite}</td>
+                                                    </tr>
+                                                ))
+                                            )
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={3} className="py-4 text-center text-gray-500">
+                                                    Aucun produit disponible
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </Layout>
         </div>
     );
 }

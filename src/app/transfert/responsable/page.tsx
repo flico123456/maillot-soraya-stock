@@ -32,7 +32,7 @@ interface ProductEntry {
     quantity: number;
 }
 
-export default function TransfertResponsable({ children }: { children: React.ReactNode }) {
+export default function TransfertResponsable() {
     const [sku, setSku] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]);
@@ -226,7 +226,7 @@ export default function TransfertResponsable({ children }: { children: React.Rea
                 },
                 body: JSON.stringify({
                     action_log: "Transfert",
-                    nom_log:"-",
+                    nom_log: "-",
                     depot_id: depotSourceId,
                     contenu_log: JSON.stringify(logContent),
                 }),
@@ -255,127 +255,128 @@ export default function TransfertResponsable({ children }: { children: React.Rea
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>
-            <div className="ml-64 p-8 w-full">
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Transfert</h1>
-                </div>
-
-                <div className="mt-10 ml-10 space-x-4 flex">
-                    {/* Sélection du dépôt source */}
-                    <div className="flex-grow">
-                        <label className="font-bold">Dépôt source :</label>
-                        <select
-                            className="border border-gray-300 rounded-full p-2 mt-2 w-full"
-                            value={depotSourceId || ""}
-                            onChange={(e) => setDepotSourceId(Number(e.target.value))}
-                        >
-                            <option value="" disabled>
-                                Sélectionner le dépôt source
-                            </option>
-                            {depots.map((depot) => (
-                                <option key={depot.id} value={depot.id}>
-                                    {depot.name}
-                                </option>
-                            ))}
-                        </select>
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    <div className="mt-10 ml-10">
+                        <h1 className="font-bold text-3xl">Transfert</h1>
                     </div>
 
-                    {/* Sélection du dépôt destination */}
-                    <div className="flex-grow">
-                        <label className="font-bold">Dépôt destination :</label>
-                        <select
-                            className="border border-gray-300 rounded-full p-2 mt-2 w-full"
-                            value={depotDestinationId || ""}
-                            onChange={(e) => setDepotDestinationId(Number(e.target.value))}
-                        >
-                            <option value="" disabled>
-                                Sélectionner le dépôt destination
-                            </option>
-                            {depots.map((depot) => (
-                                <option key={depot.id} value={depot.id}>
-                                    {depot.name}
+                    <div className="mt-10 ml-10 space-x-4 flex">
+                        {/* Sélection du dépôt source */}
+                        <div className="flex-grow">
+                            <label className="font-bold">Dépôt source :</label>
+                            <select
+                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                value={depotSourceId || ""}
+                                onChange={(e) => setDepotSourceId(Number(e.target.value))}
+                            >
+                                <option value="" disabled>
+                                    Sélectionner le dépôt source
                                 </option>
-                            ))}
-                        </select>
+                                {depots.map((depot) => (
+                                    <option key={depot.id} value={depot.id}>
+                                        {depot.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Sélection du dépôt destination */}
+                        <div className="flex-grow">
+                            <label className="font-bold">Dépôt destination :</label>
+                            <select
+                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                value={depotDestinationId || ""}
+                                onChange={(e) => setDepotDestinationId(Number(e.target.value))}
+                            >
+                                <option value="" disabled>
+                                    Sélectionner le dépôt destination
+                                </option>
+                                {depots.map((depot) => (
+                                    <option key={depot.id} value={depot.id}>
+                                        {depot.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <div className="mt-4 ml-10">
-                    {/* Input pour saisir le SKU */}
-                    <form onSubmit={handleSubmit} className="space-x-4">
-                        <input
-                            className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
-                            type="text"
-                            placeholder="Saisir le SKU"
-                            value={sku}
-                            onChange={(e) => setSku(e.target.value)}
-                            required
-                        />
-                    </form>
-                </div>
-
-                {error && (
                     <div className="mt-4 ml-10">
-                        <p className="text-red-500 font-semibold">{error}</p>
+                        {/* Input pour saisir le SKU */}
+                        <form onSubmit={handleSubmit} className="space-x-4">
+                            <input
+                                className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
+                                type="text"
+                                placeholder="Saisir le SKU"
+                                value={sku}
+                                onChange={(e) => setSku(e.target.value)}
+                                required
+                            />
+                        </form>
                     </div>
-                )}
 
-                <div className="mt-10 ml-10">
-                    <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.length > 0 ? (
-                                products.map((product, index) => (
-                                    <tr key={product.sku} className="border-t">
-                                        <td className="py-2 px-4">{product.name}</td>
-                                        <td className="py-2 px-4">{product.sku}</td>
-                                        <td className="py-2 px-4">
-                                            <input
-                                                type="number"
-                                                value={product.quantity}
-                                                min={1}
-                                                onChange={(e) => updateQuantity(index, parseInt(e.target.value))}
-                                                className="border border-gray-300 rounded p-1"
-                                            />
-                                        </td>
-                                        <td className="py-2 px-4">
-                                            <button
-                                                className="text-red-500 hover:text-red-700"
-                                                onClick={() => deleteProduct(product.sku)}
-                                            >
-                                                Supprimer
-                                            </button>
+                    {error && (
+                        <div className="mt-4 ml-10">
+                            <p className="text-red-500 font-semibold">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="mt-10 ml-10">
+                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.length > 0 ? (
+                                    products.map((product, index) => (
+                                        <tr key={product.sku} className="border-t">
+                                            <td className="py-2 px-4">{product.name}</td>
+                                            <td className="py-2 px-4">{product.sku}</td>
+                                            <td className="py-2 px-4">
+                                                <input
+                                                    type="number"
+                                                    value={product.quantity}
+                                                    min={1}
+                                                    onChange={(e) => updateQuantity(index, parseInt(e.target.value))}
+                                                    className="border border-gray-300 rounded p-1"
+                                                />
+                                            </td>
+                                            <td className="py-2 px-4">
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => deleteProduct(product.sku)}
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-4 text-gray-500">
+                                            Aucun produit ajouté pour le moment
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="text-center py-4 text-gray-500">
-                                        Aucun produit ajouté pour le moment
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div className="flex justify-end mt-10">
-                    <button
-                        className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
-                        onClick={handleValidateTransfert}
-                    >
-                        Valider le transfert
-                    </button>
+                    <div className="flex justify-end mt-10">
+                        <button
+                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            onClick={handleValidateTransfert}
+                        >
+                            Valider le transfert
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </Layout>
         </div>
     );
 }

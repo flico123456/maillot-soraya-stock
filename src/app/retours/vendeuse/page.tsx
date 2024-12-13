@@ -34,7 +34,7 @@ interface ProductStock {
     quantite: number;
 }
 
-export default function Retours({ children }: { children: React.ReactNode }) {
+export default function Retours() {
     const [sku, setSku] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depot, setDepot] = useState<Depot | null>(null);
@@ -256,7 +256,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>
+            <Layout>
             <div className="ml-64 p-8 w-full">
                 <div className="mt-10 ml-10">
                     <h1 className="font-bold text-3xl">Retours</h1>
@@ -384,6 +384,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
                     </div>
                 )}
             </div>
+            </Layout>
         </div>
     );
 }

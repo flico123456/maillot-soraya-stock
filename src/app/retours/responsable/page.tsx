@@ -9,7 +9,7 @@ interface ProductEntry {
     name: string;
     sku: string;
     quantity: number;
-}   
+}
 
 interface Depot {
     id: number;
@@ -29,7 +29,7 @@ interface ProductStock {
     quantite: number;
 }
 
-export default function Retours({ children }: { children: React.ReactNode }) {
+export default function Retours() {
     const [sku, setSku] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
@@ -106,52 +106,52 @@ export default function Retours({ children }: { children: React.ReactNode }) {
             setError("Dépôt non trouvé.");
             return [];
         }
-    
+
         try {
             const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
-    
+
             if (!response.ok) {
                 throw new Error("Erreur lors de la récupération des produits du dépôt.");
             }
-    
+
             const data: DepotStock[] = await response.json();
-    
+
             // Extraction des produits à partir du champ "stock" (convertir JSON string en tableau)
             const stockItems: ProductStock[][] = data.map((item) =>
                 JSON.parse(item.stock) as ProductStock[]
             );
-    
+
             return stockItems;
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
         }
     };
-    
+
 
     const fetchProductBySku = async () => {
         setError("");
-    
+
         try {
             const stocks = await fetchProductsByDepot();
-    
+
             // Trouver le produit correspondant au SKU
             const foundProduct = stocks
                 .flatMap((productArray) => productArray) // Aplatir le tableau
                 .find((product) => product.sku === sku);
-    
+
             if (!foundProduct) {
                 setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
                 return; // Sortir si aucun produit n'est trouvé
             }
-    
+
             // Vérifier si le produit existe déjà dans la liste des produits
             const existingProduct = products.find((p) => p.sku === foundProduct.sku);
-    
+
             if (existingProduct) {
                 // Mettre à jour la quantité pour le produit existant
                 setProducts((prevProducts) =>
@@ -172,7 +172,7 @@ export default function Retours({ children }: { children: React.ReactNode }) {
             setError("Erreur lors de la récupération du produit.");
         }
     };
-    
+
 
     const handleValidateRetour = async () => {
         if (!selectedDepotId || products.length === 0) {
@@ -290,153 +290,154 @@ export default function Retours({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>
-            <div className="ml-64 p-8 w-full">
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Retours</h1>
-                </div>
-
-                {/* Inversion des positions : Input pour SKU à gauche, sélection du dépôt à droite */}
-                <div className="flex mt-10 ml-10 space-x-4">
-                    {/* Input pour saisir le SKU */}
-                    <div className="flex-grow">
-                        <form onSubmit={handleSubmit}>
-                            <label className="font-bold">Saisir un SKU :</label>
-                            <input
-                                className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
-                                type="text"
-                                placeholder="Saisir votre article"
-                                value={sku}
-                                onChange={(e) => setSku(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                required
-                            />
-                        </form>
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    <div className="mt-10 ml-10">
+                        <h1 className="font-bold text-3xl">Retours</h1>
                     </div>
 
-                    {/* Sélection du dépôt */}
-                    <div className="flex-grow">
-                        <label className="font-bold">Sélectionner un dépôt :</label>
-                        <select
-                            className="border border-gray-300 rounded-full p-2 mt-2 w-full"
-                            value={selectedDepotId || ""}
-                            onChange={(e) => setSelectedDepotId(Number(e.target.value))}
-                        >
-                            {depots.map((depot) => (
-                                <option key={depot.id} value={depot.id}>
-                                    {depot.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                    {/* Inversion des positions : Input pour SKU à gauche, sélection du dépôt à droite */}
+                    <div className="flex mt-10 ml-10 space-x-4">
+                        {/* Input pour saisir le SKU */}
+                        <div className="flex-grow">
+                            <form onSubmit={handleSubmit}>
+                                <label className="font-bold">Saisir un SKU :</label>
+                                <input
+                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
+                                    type="text"
+                                    placeholder="Saisir votre article"
+                                    value={sku}
+                                    onChange={(e) => setSku(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    required
+                                />
+                            </form>
+                        </div>
 
-                {error && (
-                    <div className="mt-4 ml-10">
-                        <p className="text-red-500 font-semibold">{error}</p>
-                    </div>
-                )}
-
-                <div className="mt-10 ml-10">
-                    <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.length > 0 ? (
-                                products.map((product, index) => (
-                                    <tr key={product.sku} className="border-t">
-                                        <td className="py-2 px-4">{product.name}</td>
-                                        <td className="py-2 px-4">{product.sku}</td>
-                                        <td
-                                            className="py-2 px-4 cursor-pointer"
-                                            onDoubleClick={() => handleQuantityEdit(index)}
-                                        >
-                                            {editingQuantityIndex === index ? (
-                                                <input
-                                                    type="number"
-                                                    value={product.quantity}
-                                                    onChange={(e) =>
-                                                        updateQuantity(index, parseInt(e.target.value, 10))
-                                                    }
-                                                    className="border border-gray-300 rounded p-1"
-                                                />
-                                            ) : (
-                                                product.quantity
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4">
-                                            <button
-                                                className="text-red-500 hover:text-red-700"
-                                                onClick={() => deleteProduct(product.sku)}
-                                            >
-                                                Supprimer
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="text-center py-4 text-gray-500">
-                                        Aucun produit ajouté pour le moment
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="flex justify-end mt-10">
-                    <button
-                        className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
-                        onClick={handleValidateRetour}
-                    >
-                        Valider le retour
-                    </button>
-                </div>
-
-                {showMotifModal && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-                        <div className="bg-white p-8 rounded-lg shadow-lg relative max-w-lg w-full">
-                            {/* Croix pour fermer le modal */}
-                            <Image
-                                alt="img-close"
-                                src="/close-icon.svg"
-                                width={32}
-                                height={32}
-                                className="absolute top-3 right-3 cursor-pointer"
-                                onClick={() => setShowMotifModal(false)} // Fermer le modal
-                            />
-
-                            <h2 className="text-xl font-bold mb-6">Sélectionner le motif de retour</h2>
+                        {/* Sélection du dépôt */}
+                        <div className="flex-grow">
+                            <label className="font-bold">Sélectionner un dépôt :</label>
                             <select
-                                value={selectedMotif || ""}
-                                onChange={(e) => setSelectedMotif(e.target.value)}
-                                className="border border-gray-300 rounded p-2 w-full mb-4"
+                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                value={selectedDepotId || ""}
+                                onChange={(e) => setSelectedDepotId(Number(e.target.value))}
                             >
-                                <option value="" disabled>Choisir un motif</option>
-                                <option value="Erreur">Erreur</option>
-                                <option value="Remboursement">Remboursement</option>
-                                <option value="Abime">Abimé</option>
+                                {depots.map((depot) => (
+                                    <option key={depot.id} value={depot.id}>
+                                        {depot.name}
+                                    </option>
+                                ))}
                             </select>
-
-                            <div className="flex justify-end">
-                                <button
-                                    className="mt-5 w-full bg-black text-white p-2 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
-                                    onClick={handleConfirmRetour}
-                                >
-                                    Confirmer le retour
-                                </button>
-                            </div>
                         </div>
                     </div>
-                )}
-            </div>
+
+                    {error && (
+                        <div className="mt-4 ml-10">
+                            <p className="text-red-500 font-semibold">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="mt-10 ml-10">
+                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.length > 0 ? (
+                                    products.map((product, index) => (
+                                        <tr key={product.sku} className="border-t">
+                                            <td className="py-2 px-4">{product.name}</td>
+                                            <td className="py-2 px-4">{product.sku}</td>
+                                            <td
+                                                className="py-2 px-4 cursor-pointer"
+                                                onDoubleClick={() => handleQuantityEdit(index)}
+                                            >
+                                                {editingQuantityIndex === index ? (
+                                                    <input
+                                                        type="number"
+                                                        value={product.quantity}
+                                                        onChange={(e) =>
+                                                            updateQuantity(index, parseInt(e.target.value, 10))
+                                                        }
+                                                        className="border border-gray-300 rounded p-1"
+                                                    />
+                                                ) : (
+                                                    product.quantity
+                                                )}
+                                            </td>
+                                            <td className="py-2 px-4">
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => deleteProduct(product.sku)}
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-4 text-gray-500">
+                                            Aucun produit ajouté pour le moment
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="flex justify-end mt-10">
+                        <button
+                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            onClick={handleValidateRetour}
+                        >
+                            Valider le retour
+                        </button>
+                    </div>
+
+                    {showMotifModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                            <div className="bg-white p-8 rounded-lg shadow-lg relative max-w-lg w-full">
+                                {/* Croix pour fermer le modal */}
+                                <Image
+                                    alt="img-close"
+                                    src="/close-icon.svg"
+                                    width={32}
+                                    height={32}
+                                    className="absolute top-3 right-3 cursor-pointer"
+                                    onClick={() => setShowMotifModal(false)} // Fermer le modal
+                                />
+
+                                <h2 className="text-xl font-bold mb-6">Sélectionner le motif de retour</h2>
+                                <select
+                                    value={selectedMotif || ""}
+                                    onChange={(e) => setSelectedMotif(e.target.value)}
+                                    className="border border-gray-300 rounded p-2 w-full mb-4"
+                                >
+                                    <option value="" disabled>Choisir un motif</option>
+                                    <option value="Erreur">Erreur</option>
+                                    <option value="Remboursement">Remboursement</option>
+                                    <option value="Abime">Abimé</option>
+                                </select>
+
+                                <div className="flex justify-end">
+                                    <button
+                                        className="mt-5 w-full bg-black text-white p-2 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                                        onClick={handleConfirmRetour}
+                                    >
+                                        Confirmer le retour
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Layout>
         </div>
     );
 }

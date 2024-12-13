@@ -18,7 +18,7 @@ interface Depot {
 
 const SAINT_CANNAT_ID = 1; // ID de Saint-Cannat
 
-export default function Reception({ children }: { children: React.ReactNode }) {
+export default function Reception() {
     const [sku, setSku] = useState(""); // État pour stocker le SKU saisi
     const [products, setProducts] = useState<ProductEntry[]>([]); // État pour stocker la liste des produits ajoutés
     const [depots, setDepots] = useState<Depot[]>([]); // État pour stocker la liste des dépôts
@@ -57,7 +57,7 @@ export default function Reception({ children }: { children: React.ReactNode }) {
             const data = await response.json();
 
             if (data.length === 0) {
-                
+
             } else {
                 const productData = data[0];
                 const existingProduct = products.find((p) => p.sku === productData.sku);
@@ -228,141 +228,142 @@ export default function Reception({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>;
-            <div className="ml-64 p-8 w-full">
-                {/* Titre de la page */}
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Réceptions</h1>
-                </div>
-
-                <div className="flex">
-                    {/* Formulaire pour entrer le SKU */}
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    {/* Titre de la page */}
                     <div className="mt-10 ml-10">
-                        <form onSubmit={handleSubmit}>
-                            <input
-                                className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
-                                type="text"
-                                placeholder="Saisir votre article"
-                                value={sku}
-                                onChange={(e) => setSku(e.target.value)}
-                                onKeyDown={handleKeyDown} // Écoute la touche "Entrée"
-                                required
-                            />
-                        </form>
+                        <h1 className="font-bold text-3xl">Réceptions</h1>
                     </div>
-                </div>
 
-                {/* Affichage du tableau des produits ajoutés, même si vide */}
-                <div className="mt-10 ml-10">
-                    <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.length > 0 ? (
-                                products.map((product, index) => (
-                                    <tr key={product.sku} className="border-t">
-                                        <td className="py-2 px-4">{product.name}</td>
-                                        <td className="py-2 px-4">{product.sku}</td>
-                                        <td
-                                            className="py-2 px-4 cursor-pointer"
-                                            onDoubleClick={() => handleQuantityEdit(index)}
-                                        >
-                                            {editingQuantityIndex === index ? (
-                                                <input
-                                                    type="number"
-                                                    value={product.quantity}
-                                                    onChange={(e) =>
-                                                        updateQuantity(index, parseInt(e.target.value, 10))
-                                                    }
-                                                    className="border border-gray-300 rounded p-1"
-                                                    onBlur={() => setEditingQuantityIndex(null)} // Quitter le mode édition quand on clique en dehors
-                                                />
-                                            ) : (
-                                                product.quantity
-                                            )}
-                                        </td>
-                                        <td className="py-2 px-4">
-                                            <button
-                                                className="text-red-500 hover:text-red-700"
-                                                onClick={() => deleteProduct(product.sku)}
-                                            >
-                                                Supprimer
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="text-center py-4 text-gray-500">
-                                        Aucun produit ajouté pour le moment
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Bouton Valider la réception en bas à droite */}
-                <div className="flex justify-end mt-10">
-                    <button
-                        className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
-                        onClick={openConfirmationDialog} // Ouvrir la boîte de dialogue
-                    >
-                        Valider la réception
-                    </button>
-                </div>
-
-                {/* Modal de confirmation avec sélection du dépôt */}
-                {showConfirmation && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg relative">
-                            {/* Croix pour fermer la boîte de dialogue */}
-                            <Image
-                                alt="img-close"
-                                src="/close-icon.svg"
-                                width={32}
-                                height={32}
-                                className="absolute top-3 right-3 cursor-pointer"
-                                onClick={closeConfirmationDialog} // Fermer la boîte de dialogue
-                            />
-                            <h2 className="text-xl font-bold mb-4">Confirmation de la réception</h2>
-                            <p>Sélectionnez un dépôt avant de confirmer la réception :</p>
-
-                            {/* Sélection du dépôt dans le modal */}
-                            <div className="mt-4">
-                                <label htmlFor="depot-select" className="font-bold">Sélectionner un dépôt :</label>
-                                <select
-                                    id="depot-select"
-                                    className="border border-gray-300 rounded-full p-2 mt-2 w-full"
-                                    value={selectedDepotId || ""}
-                                    onChange={(e) => setSelectedDepotId(Number(e.target.value))}
-                                >
-                                    {depots.map((depot) => (
-                                        <option key={depot.id} value={depot.id}>
-                                            {depot.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="mt-4 flex justify-end">
-                                <button
-                                    className="bg-green-500 text-white p-2 rounded-md"
-                                    onClick={confirmReception}
-                                >
-                                    Confirmer
-                                </button>
-                            </div>
+                    <div className="flex">
+                        {/* Formulaire pour entrer le SKU */}
+                        <div className="mt-10 ml-10">
+                            <form onSubmit={handleSubmit}>
+                                <input
+                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
+                                    type="text"
+                                    placeholder="Saisir votre article"
+                                    value={sku}
+                                    onChange={(e) => setSku(e.target.value)}
+                                    onKeyDown={handleKeyDown} // Écoute la touche "Entrée"
+                                    required
+                                />
+                            </form>
                         </div>
                     </div>
-                )}
-            </div>
+
+                    {/* Affichage du tableau des produits ajoutés, même si vide */}
+                    <div className="mt-10 ml-10">
+                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">SKU</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Quantité</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.length > 0 ? (
+                                    products.map((product, index) => (
+                                        <tr key={product.sku} className="border-t">
+                                            <td className="py-2 px-4">{product.name}</td>
+                                            <td className="py-2 px-4">{product.sku}</td>
+                                            <td
+                                                className="py-2 px-4 cursor-pointer"
+                                                onDoubleClick={() => handleQuantityEdit(index)}
+                                            >
+                                                {editingQuantityIndex === index ? (
+                                                    <input
+                                                        type="number"
+                                                        value={product.quantity}
+                                                        onChange={(e) =>
+                                                            updateQuantity(index, parseInt(e.target.value, 10))
+                                                        }
+                                                        className="border border-gray-300 rounded p-1"
+                                                        onBlur={() => setEditingQuantityIndex(null)} // Quitter le mode édition quand on clique en dehors
+                                                    />
+                                                ) : (
+                                                    product.quantity
+                                                )}
+                                            </td>
+                                            <td className="py-2 px-4">
+                                                <button
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => deleteProduct(product.sku)}
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-4 text-gray-500">
+                                            Aucun produit ajouté pour le moment
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Bouton Valider la réception en bas à droite */}
+                    <div className="flex justify-end mt-10">
+                        <button
+                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            onClick={openConfirmationDialog} // Ouvrir la boîte de dialogue
+                        >
+                            Valider la réception
+                        </button>
+                    </div>
+
+                    {/* Modal de confirmation avec sélection du dépôt */}
+                    {showConfirmation && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg relative">
+                                {/* Croix pour fermer la boîte de dialogue */}
+                                <Image
+                                    alt="img-close"
+                                    src="/close-icon.svg"
+                                    width={32}
+                                    height={32}
+                                    className="absolute top-3 right-3 cursor-pointer"
+                                    onClick={closeConfirmationDialog} // Fermer la boîte de dialogue
+                                />
+                                <h2 className="text-xl font-bold mb-4">Confirmation de la réception</h2>
+                                <p>Sélectionnez un dépôt avant de confirmer la réception :</p>
+
+                                {/* Sélection du dépôt dans le modal */}
+                                <div className="mt-4">
+                                    <label htmlFor="depot-select" className="font-bold">Sélectionner un dépôt :</label>
+                                    <select
+                                        id="depot-select"
+                                        className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                        value={selectedDepotId || ""}
+                                        onChange={(e) => setSelectedDepotId(Number(e.target.value))}
+                                    >
+                                        {depots.map((depot) => (
+                                            <option key={depot.id} value={depot.id}>
+                                                {depot.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        className="bg-green-500 text-white p-2 rounded-md"
+                                        onClick={confirmReception}
+                                    >
+                                        Confirmer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Layout>
         </div>
     );
 }

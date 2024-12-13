@@ -24,7 +24,7 @@ interface ProductEntry {
     quantite: number;
 }
 
-export default function LogsPage({ children }: { children: React.ReactNode }) {
+export default function LogsPage() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [depots, setDepots] = useState<{ [key: number]: string }>({});
     const [error, setError] = useState<string | null>(null);
@@ -92,47 +92,48 @@ export default function LogsPage({ children }: { children: React.ReactNode }) {
 
     return (
         <div className="flex min-h-screen bg-gray-200">
-            <Layout>{children}</Layout>;
-            <div className="ml-64 p-8 w-full">
-                <div className="mt-10 ml-10">
-                    <h1 className="font-bold text-3xl">Logs</h1>
-                </div>
+            <Layout>
+                <div className="ml-64 p-8 w-full">
+                    <div className="mt-10 ml-10">
+                        <h1 className="font-bold text-3xl">Logs</h1>
+                    </div>
 
-                {error && <p className="text-red-500">{error}</p>}
+                    {error && <p className="text-red-500">{error}</p>}
 
-                {/* Tableau des logs */}
-                <div className="mt-10 ml-10">
-                    <table className="min-w-full bg-white rounded-lg shadow-lg overflow-hidden">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Action du Log</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du Log</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du Dépôt</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Date</th>
-                                <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {logs.map((log) => (
-                                <tr key={log.id} className="border-t">
-                                    <td className="py-2 px-4">{log.action_log}</td>
-                                    <td className="py-2 px-4">{log.nom_log}</td>
-                                    <td className="py-2 px-4">{depots[log.depot_id] || "Dépôt inconnu"}</td>
-                                    <td className="py-2 px-4">{new Date(log.date).toLocaleDateString()}</td>
-                                    <td className="py-2 px-4">
-                                        <button
-                                            className="bg-black text-white p-2 px-3 rounded-full hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
-                                            onClick={() => handleConsultLog(log)}
-                                        >
-                                            Consulter
-                                        </button>
-                                    </td>
+                    {/* Tableau des logs */}
+                    <div className="mt-10 ml-10">
+                        <table className="min-w-full bg-white rounded-lg shadow-lg overflow-hidden">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Action du Log</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du Log</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du Dépôt</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Date</th>
+                                    <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {logs.map((log) => (
+                                    <tr key={log.id} className="border-t">
+                                        <td className="py-2 px-4">{log.action_log}</td>
+                                        <td className="py-2 px-4">{log.nom_log}</td>
+                                        <td className="py-2 px-4">{depots[log.depot_id] || "Dépôt inconnu"}</td>
+                                        <td className="py-2 px-4">{new Date(log.date).toLocaleDateString()}</td>
+                                        <td className="py-2 px-4">
+                                            <button
+                                                className="bg-black text-white p-2 px-3 rounded-full hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                                                onClick={() => handleConsultLog(log)}
+                                            >
+                                                Consulter
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </Layout>
         </div>
     );
 }
