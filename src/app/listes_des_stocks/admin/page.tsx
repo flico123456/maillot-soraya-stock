@@ -49,7 +49,6 @@ const fetchProducts = async (): Promise<Product[]> => {
             }
         );
         const data = await response.json();
-        console.log("Produits récupérés :", data); // Debug
         return data;
     } catch (error) {
         console.error("Erreur lors de la récupération des produits :", error);
@@ -69,9 +68,7 @@ const fetchLocalStock = async (depotId: number): Promise<DepotStockResponse[]> =
                 },
             }
         );
-        const data = await response.json();
-        console.log("Données brutes de fetchLocalStock :", data); // Debug
-        return data;
+        return await response.json();
     } catch (error) {
         console.error("Erreur lors de la récupération des stocks locaux :", error);
         return [];
@@ -82,9 +79,7 @@ const fetchLocalStock = async (depotId: number): Promise<DepotStockResponse[]> =
 const fetchDepots = async (): Promise<Depot[]> => {
     try {
         const response = await fetch("http://localhost:3001/depots/select");
-        const data = await response.json();
-        console.log("Dépôts récupérés :", data); // Debug
-        return data;
+        return await response.json();
     } catch (error) {
         console.error("Erreur lors de la récupération des dépôts :", error);
         return [];
@@ -97,15 +92,18 @@ export default function ListeDesStock() {
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+
     const [role, setRole] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
 
-    // Récupérer le rôle et le nom d'utilisateur depuis le localStorage
+    // Récupérer le rôle et le nom d'utilisateur depuis le localStorage (côté client uniquement)
     useEffect(() => {
-        const storedRole = localStorage.getItem("role");
-        const storedUsername = localStorage.getItem("username");
-        setRole(storedRole);
-        setUsername(storedUsername);
+        if (typeof window !== "undefined") {
+            const storedRole = localStorage.getItem("role");
+            const storedUsername = localStorage.getItem("username");
+            setRole(storedRole);
+            setUsername(storedUsername);
+        }
     }, []);
 
     const fetchStock = async () => {
@@ -117,20 +115,16 @@ export default function ListeDesStock() {
             } else if (selectedDepot !== null) {
                 const localStockResponse: DepotStockResponse[] = await fetchLocalStock(selectedDepot);
 
-                // Vérifiez que la réponse contient des données et parsez 'stock'
                 const processedStock: Product[] = localStockResponse.flatMap((item, index) => {
                     const parsedStock: StockItem[] = JSON.parse(item.stock || "[]");
-                    console.log("Stock analysé pour l'élément :", parsedStock);
-
                     return parsedStock.map((stockItem) => ({
-                        id: index + 1, // Génération d'un ID unique
+                        id: index + 1,
                         name: stockItem.nom_produit,
                         sku: stockItem.sku,
                         stock: [stockItem],
                     }));
                 });
 
-                console.log("Stock transformé en Product[] :", processedStock);
                 setProductList(processedStock);
             }
         } catch (error) {
@@ -155,7 +149,9 @@ export default function ListeDesStock() {
                 setDepotList(depots);
             }
         };
-        loadDepots();
+        if (role !== null) {
+            loadDepots();
+        }
     }, [role, username]);
 
     useEffect(() => {
