@@ -97,7 +97,6 @@ export default function ListeDesStock() {
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-
     const [role, setRole] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
 
