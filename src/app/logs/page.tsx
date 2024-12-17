@@ -66,7 +66,7 @@ export default function LogsPage() {
     const handleConsultLog = (log: LogEntry) => {
         try {
             // Double parsing de contenu_log
-            const parsedLog: ProductEntry[] = JSON.parse(JSON.parse(log.contenu_log));
+            
 
 
             // Mapper les objets ProductEntry vers Product
