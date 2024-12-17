@@ -20,7 +20,7 @@ export default function Depot() {
     // Fonction pour récupérer les dépôts depuis l'API
     const fetchDepots = async () => {
         try {
-            const response = await fetch("http://51.222.13.7:3001/depots/select");
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/depots/select");
             const data: Depot[] = await response.json();
             console.log("Dépôts récupérés :", data);
             setDepotList(data); // Mise à jour de l'état avec les données
