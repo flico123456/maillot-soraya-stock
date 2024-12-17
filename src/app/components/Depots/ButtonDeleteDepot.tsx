@@ -21,7 +21,7 @@ const ButtonDeleteDepot: React.FC<ButtonDeleteDepotProps> = ({ onDepotDeleted })
             return;
         }
 
-        const response = await fetch(`http://localhost:3001/depots/delete/${depotId}`, {
+        const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/delete/${depotId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

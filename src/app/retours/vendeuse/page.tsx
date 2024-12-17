@@ -53,7 +53,7 @@ export default function Retours() {
 
     const fetchDepotByUsername = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const depots = await response.json();
 
             const userDepot = depots.find((depot : Depot) => depot.username_associe === username);
@@ -77,7 +77,7 @@ export default function Retours() {
         }
     
         try {
-            const response = await fetch(`http://localhost:3001/stock_by_depot/select/${depot.id}`, {
+            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${depot.id}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -155,7 +155,7 @@ export default function Retours() {
                 quantite: product.quantity,
             }));
 
-            const response = await fetch("http://localhost:3001/logs/create", {
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
@@ -184,7 +184,7 @@ export default function Retours() {
 
         try {
             for (const product of products) {
-                const response = await fetch(`http://localhost:3001/stock_by_depot/update/${depot?.id}`, {
+                const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depot?.id}`, {
                     method: 'PUT',
                     headers: {
                         "Content-Type": "application/json",

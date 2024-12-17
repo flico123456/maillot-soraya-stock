@@ -48,7 +48,7 @@ export default function TransfertAdmin() {
     // Récupérer tous les dépôts (sans restriction)
     const fetchAllDepots = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const depotsData = await response.json();
             setDepots(depotsData);
         } catch (error) {
@@ -89,7 +89,7 @@ export default function TransfertAdmin() {
     // Récupérer les produits locaux (non WooCommerce)
     const fetchProductsByDepot = async (depotId: number): Promise<ProductStock[]> => {
         try {
-            const response = await fetch(`http://localhost:3001/stock_by_depot/select/${depotId}`, {
+            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${depotId}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -218,7 +218,7 @@ export default function TransfertAdmin() {
                     await updateWooCommerceStock(product.sku, -product.quantity);
                 } else {
                     // Diminuer la quantité dans le dépôt source via l'API locale
-                    await fetch(`http://localhost:3001/stock_by_depot/update/${depotSourceId}`, {
+                    await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotSourceId}`, {
                         method: 'PUT',
                         headers: {
                             "Content-Type": "application/json",
@@ -236,7 +236,7 @@ export default function TransfertAdmin() {
                     await updateWooCommerceStock(product.sku, product.quantity);
                 } else {
                     // Augmenter la quantité dans le dépôt destination via l'API locale
-                    await fetch(`http://localhost:3001/stock_by_depot/update/${depotDestinationId}`, {
+                    await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotDestinationId}`, {
                         method: 'PUT',
                         headers: {
                             "Content-Type": "application/json",
@@ -257,7 +257,7 @@ export default function TransfertAdmin() {
                 quantite: product.quantity,
             }));
 
-            await fetch("http://localhost:3001/logs/create", {
+            await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",

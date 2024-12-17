@@ -28,7 +28,7 @@ const ButtonAddDepot: React.FC<ButtonAddDepotProps> = ({ onDepotAdded }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const response = await fetch("http://localhost:3001/depots/create", {
+        const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/depots/create", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

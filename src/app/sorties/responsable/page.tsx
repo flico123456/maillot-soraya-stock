@@ -48,7 +48,7 @@ export default function Sorties() {
     // Récupérer la localisation de l'utilisateur à partir des dépôts associés
     const fetchLocalisationByUsername = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const depotsData = await response.json();
             const userDepot = depotsData.find((depot: Depot) => depot.username_associe === username);
             if (userDepot) {
@@ -68,7 +68,7 @@ export default function Sorties() {
     // Récupérer tous les dépôts avec la même localisation
     const fetchDepotsByLocalisation = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const depotsData = await response.json();
 
             const depotsWithSameLocalisation = depotsData.filter(
@@ -97,7 +97,7 @@ export default function Sorties() {
             return [];
         }
         try {
-            const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
+            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${selectedDepotId}`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -172,7 +172,7 @@ export default function Sorties() {
                 quantite: product.quantity,
             }));
 
-            const response = await fetch("http://localhost:3001/logs/create", {
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
@@ -201,7 +201,7 @@ export default function Sorties() {
 
         try {
             for (const product of products) {
-                const response = await fetch(`http://localhost:3001/stock_by_depot/update/${selectedDepotId}`, {
+                const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${selectedDepotId}`, {
                     method: 'PUT',
                     headers: {
                         "Content-Type": "application/json",

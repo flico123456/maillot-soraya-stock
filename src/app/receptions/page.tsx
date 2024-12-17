@@ -28,7 +28,7 @@ export default function Reception() {
     // Fonction pour récupérer la liste des dépôts
     const fetchDepots = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const data = await response.json();
             setDepots(data);
             if (data.length > 0) {
@@ -124,11 +124,11 @@ export default function Reception() {
                 // Vérification et mise à jour/création pour les autres dépôts
                 for (const product of products) {
                     // Vérifier si le dépôt a déjà un stock
-                    const selectResponse = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`);
+                    const selectResponse = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${selectedDepotId}`);
 
                     if (selectResponse.status === 404) {
                         // Si le stock pour ce dépôt n'existe pas, on le crée
-                        await fetch(`http://localhost:3001/stock_by_depot/create`, {
+                        await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/create`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export default function Reception() {
                         });
                     } else {
                         // Si le stock existe, on met à jour le produit
-                        await fetch(`http://localhost:3001/stock_by_depot/update/${selectedDepotId}`, {
+                        await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${selectedDepotId}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',

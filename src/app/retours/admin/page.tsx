@@ -46,7 +46,7 @@ export default function Retours() {
     // Fonction pour récupérer tous les dépôts sans filtre
     const fetchAllDepots = async () => {
         try {
-            const response = await fetch('http://localhost:3001/depots/select');
+            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
             const data = await response.json();
             setDepots(data);
 
@@ -96,7 +96,7 @@ export default function Retours() {
                     quantite: product.stock_quantity,
                 }));
             } else {
-                const response = await fetch(`http://localhost:3001/stock_by_depot/select/${selectedDepotId}`, {
+                const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${selectedDepotId}`, {
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -179,7 +179,7 @@ export default function Retours() {
                 quantite: product.quantity,
             }));
 
-            const response = await fetch("http://localhost:3001/logs/create", {
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
@@ -241,7 +241,7 @@ export default function Retours() {
                     });
                 } else {
                     // Utiliser l'API locale pour mettre à jour le stock des autres dépôts
-                    const response = await fetch(`http://localhost:3001/stock_by_depot/update/${selectedDepotId}`, {
+                    const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${selectedDepotId}`, {
                         method: 'PUT',
                         headers: {
                             "Content-Type": "application/json",

@@ -23,7 +23,7 @@ const ButtonEditDepot: React.FC<ButtonEditDepotProps> = ({ onDepotUpdated }) => 
             return;
         }
 
-        const response = await fetch(`http://localhost:3001/depots/update/${depotId}`, {
+        const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/update/${depotId}`, {
             method: 'PUT', // Ou 'PATCH' en fonction de votre API
             headers: {
                 'Content-Type': 'application/json',

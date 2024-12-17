@@ -54,7 +54,7 @@ const fetchProducts = async (): Promise<Product[]> => {
 const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
     try {
         const response = await fetch(
-            `http://localhost:3001/stock_by_depot/select/${depotId}`,
+            `https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${depotId}`,
             {
                 headers: { "Content-Type": "application/json" },
             }
@@ -73,7 +73,7 @@ const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
 // Fonction pour récupérer la liste des dépôts
 const fetchDepots = async (): Promise<Depot[]> => {
     try {
-        const response = await fetch("http://localhost:3001/depots/select");
+        const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/depots/select");
         return await response.json();
     } catch (error) {
         console.error("Erreur lors de la récupération des dépôts :", error);
