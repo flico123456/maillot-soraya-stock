@@ -2,7 +2,7 @@
 
 import Layout from "@/app/components/Layout";
 import { useEffect, useState } from "react";
-import { generatePDF } from "../components/PdfGenerator";
+//import { generatePDF } from "../components/PdfGenerator";
 
 interface LogEntry {
     id: number;
@@ -78,7 +78,7 @@ export default function LogsPage() {
             }));
 
             // Générer le PDF avec les produits mappés
-            generatePDF(mappedProducts, log.action_log, log.nom_log, depotName, '/logo-soraya.png');
+            //generatePDF(mappedProducts, log.action_log, log.nom_log, depotName, '/logo-soraya.png');
         } catch (error) {
             console.error("Erreur lors du traitement du log:", error);
             setError("Erreur lors du traitement du log.");
