@@ -1,21 +1,30 @@
-"use client"; // Assurer que le layout est exécuté côté client
+"use client"; // Assurer que ce composant est exécuté côté client
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import VerticalNavbar from "./NavBar";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Vérifier s'il y a un token dans le localStorage
-    const token = localStorage.getItem("token");
+    setIsClient(true); // Indiquer que nous sommes côté client
 
-    if (!token) {
-      // Rediriger vers la page de connexion si aucun token n'est trouvé
-      router.push("/connexion");
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        // Rediriger vers la page de connexion si aucun token n'est trouvé
+        router.push("/connexion");
+      }
     }
   }, [router]);
+
+  // Si le composant est encore en attente d'exécution côté client, on peut afficher un loader
+  if (!isClient) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div>
