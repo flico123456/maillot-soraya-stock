@@ -68,14 +68,8 @@ export default function LogsPage() {
             // Double parsing de contenu_log
             const parsedLog: ProductEntry[] = JSON.parse(JSON.parse(log.contenu_log));
 
-            const depotName = depots[log.depot_id] || "Dépôt inconnu";
 
             // Mapper les objets ProductEntry vers Product
-            const mappedProducts = parsedLog.map((product) => ({
-                name: product.nom_produit, // Remplacer `nom_produit` par `name`
-                sku: product.sku,
-                quantity: product.quantite, // Remplacer `quantite` par `quantity`
-            }));
 
             // Générer le PDF avec les produits mappés
             //generatePDF(mappedProducts, log.action_log, log.nom_log, depotName, '/logo-soraya.png');
