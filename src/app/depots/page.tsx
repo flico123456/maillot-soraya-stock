@@ -42,21 +42,21 @@ export default function Depot() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
+                <div className="p-8 w-full max-w-5xl mt-20">
                     {/* Titre de la page */}
-                    <div className="mt-10 ml-10">
+                    <div className="flex mb-10">
                         <h1 className="font-bold text-3xl">Dépôts</h1>
                     </div>
 
-                    <div className="flex mt-10 ml-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-10">
                         {/* Tableau pour afficher les dépôts */}
-                        <div className="w-3/4">
+                        <div className="w-full md:w-3/4">
                             {loading ? (
                                 <p className="text-center text-gray-500">Chargement des dépôts...</p>
                             ) : (
-                                <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                <table className="w-full bg-white rounded-lg overflow-hidden">
                                     <thead>
                                         <tr>
                                             <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">ID</th>
@@ -86,9 +86,8 @@ export default function Depot() {
                                 </table>
                             )}
                         </div>
-
                         {/* Boutons pour ajouter, modifier, supprimer */}
-                        <div className="ml-10 mt-20 flex flex-col space-y-4">
+                        <div className="flex flex-col space-y-4">
                             {/* Passer la fonction refreshDepots comme prop à ButtonAddDepot */}
                             <ButtonAddDepot onDepotAdded={refreshDepots} />
                             <ButtonEditDepot onDepotUpdated={refreshDepots} />

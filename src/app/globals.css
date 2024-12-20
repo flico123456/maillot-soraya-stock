@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: theme('colors.color-fond'); /* Utilisation de la couleur définie dans Tailwind */
   --foreground: #171717;
 }
 
@@ -15,8 +15,7 @@
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  @apply bg-color-fond text-gray-800; /* Application de la classe Tailwind */
   font-family: Arial, Helvetica, sans-serif;
 }
 

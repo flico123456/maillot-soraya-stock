@@ -249,19 +249,19 @@ export default function TransfertResponsable() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
-                    <div className="mt-10 ml-10">
+                <div className="p-8 w-full max-w-5xl">
+                    <div className="text-center flex mt-20">
                         <h1 className="font-bold text-3xl">Transfert</h1>
                     </div>
 
-                    <div className="mt-10 ml-10 space-x-4 flex">
+                    <div className="mt-10 space-x-4 flex justify-between">
                         {/* Sélection du dépôt source */}
                         <div className="flex-grow">
                             <label className="font-bold">Dépôt source :</label>
                             <select
-                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                className="border border-gray-300 rounded-lg p-2 mt-2 w-full"
                                 value={depotSourceId || ""}
                                 onChange={(e) => setDepotSourceId(Number(e.target.value))}
                             >
@@ -280,7 +280,7 @@ export default function TransfertResponsable() {
                         <div className="flex-grow">
                             <label className="font-bold">Dépôt destination :</label>
                             <select
-                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                className="border border-gray-300 rounded-lg p-2 mt-2 w-full"
                                 value={depotDestinationId || ""}
                                 onChange={(e) => setDepotDestinationId(Number(e.target.value))}
                             >
@@ -296,11 +296,11 @@ export default function TransfertResponsable() {
                         </div>
                     </div>
 
-                    <div className="mt-4 ml-10">
+                    <div className="mt-4 text-center">
                         {/* Input pour saisir le SKU */}
                         <form onSubmit={handleSubmit} className="space-x-4">
                             <input
-                                className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
+                                className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2"
                                 type="text"
                                 placeholder="Saisir le SKU"
                                 value={sku}
@@ -311,13 +311,13 @@ export default function TransfertResponsable() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 ml-10">
+                        <div className="mt-4 text-center">
                             <p className="text-red-500 font-semibold">{error}</p>
                         </div>
                     )}
 
-                    <div className="mt-10 ml-10">
-                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                    <div className="mt-10">
+                        <table className="w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
@@ -364,7 +364,7 @@ export default function TransfertResponsable() {
 
                     <div className="flex justify-end mt-10">
                         <button
-                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
                             onClick={handleValidateTransfert}
                         >
                             Valider le transfert

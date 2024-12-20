@@ -239,18 +239,18 @@ export default function Sorties() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
-                    <div className="mt-10 ml-10">
+                <div className="p-8 w-full max-w-5xl">
+                    <div className="text-center flex mt-20">
                         <h1 className="font-bold text-3xl">Sorties</h1>
                     </div>
 
-                    <div className="flex">
-                        <div className="mt-10 ml-10">
+                    <div className="flex mt-10 space-x-4">
+                        <div className="flex-grow">
                             <form onSubmit={handleSubmit}>
                                 <input
-                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
+                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
                                     type="text"
                                     placeholder="Saisir votre article"
                                     value={sku}
@@ -263,13 +263,13 @@ export default function Sorties() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 ml-10">
+                        <div className="mt-4 text-center">
                             <p className="text-red-500 font-semibold">{error}</p>
                         </div>
                     )}
 
-                    <div className="mt-10 ml-10">
-                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                    <div className="mt-10">
+                        <table className="w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>

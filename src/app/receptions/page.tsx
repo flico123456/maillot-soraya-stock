@@ -224,34 +224,31 @@ export default function Reception() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
-                    {/* Titre de la page */}
-                    <div className="mt-10 ml-10">
+                <div className="p-8 w-full max-w-5xl">
+                    <div className="text-center flex mt-20">
                         <h1 className="font-bold text-3xl">Réceptions</h1>
                     </div>
 
-                    <div className="flex">
+                    <div className="mt-10 flex justify-center">
                         {/* Formulaire pour entrer le SKU */}
-                        <div className="mt-10 ml-10">
-                            <form onSubmit={handleSubmit}>
-                                <input
-                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2"
-                                    type="text"
-                                    placeholder="Saisir votre article"
-                                    value={sku}
-                                    onChange={(e) => setSku(e.target.value)}
-                                    onKeyDown={handleKeyDown} // Écoute la touche "Entrée"
-                                    required
-                                />
-                            </form>
-                        </div>
+                        <form onSubmit={handleSubmit} className="space-x-4">
+                            <input
+                                className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2"
+                                type="text"
+                                placeholder="Saisir votre article"
+                                value={sku}
+                                onChange={(e) => setSku(e.target.value)}
+                                onKeyDown={handleKeyDown} // Écoute la touche "Entrée"
+                                required
+                            />
+                        </form>
                     </div>
 
                     {/* Affichage du tableau des produits ajoutés, même si vide */}
-                    <div className="mt-10 ml-10">
-                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                    <div className="mt-10">
+                        <table className="w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
@@ -308,7 +305,7 @@ export default function Reception() {
                     {/* Bouton Valider la réception en bas à droite */}
                     <div className="flex justify-end mt-10">
                         <button
-                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
                             onClick={openConfirmationDialog} // Ouvrir la boîte de dialogue
                         >
                             Valider la réception
@@ -336,7 +333,7 @@ export default function Reception() {
                                     <label htmlFor="depot-select" className="font-bold">Sélectionner un dépôt :</label>
                                     <select
                                         id="depot-select"
-                                        className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                        className="border border-gray-300 rounded-lg p-2 mt-2 w-full"
                                         value={selectedDepotId || ""}
                                         onChange={(e) => setSelectedDepotId(Number(e.target.value))}
                                     >
@@ -350,7 +347,7 @@ export default function Reception() {
 
                                 <div className="mt-4 flex justify-end">
                                     <button
-                                        className="bg-green-500 text-white p-2 rounded-md"
+                                        className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
                                         onClick={confirmReception}
                                     >
                                         Confirmer

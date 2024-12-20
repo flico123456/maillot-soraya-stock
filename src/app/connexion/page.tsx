@@ -129,10 +129,10 @@ export default function Authentification() {
   };
 
   return (
-    <div className="flex justify-center mt-44">
-      <div className="rounded-xl shadow-xl p-10">
+    <div className="flex justify-center items-center min-h-screen">
+      <div>
         <div className="flex flex-col items-center justify-center">
-          <div className="mb-10">
+          <div className="mb-5">
             <div className="flex justify-center">
               <Image src="/logo-soraya.png" alt="logo" width={500} height={500} />
             </div>
@@ -148,7 +148,7 @@ export default function Authentification() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="p-1 mt-1 border rounded-full border-slate-500 w-80 pl-2"
+                  className="font-inter text-sm p-2 mt-1 font-bold border rounded-lg bg-color-white-soraya w-80 pl-2"
                   required
                 />
               </div>
@@ -161,7 +161,7 @@ export default function Authentification() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="p-1 mt-3 font-bold border rounded-full border-slate-500 w-80 pl-2"
+                  className="font-inter text-sm p-2 mt-1 font-bold border rounded-lg bg-color-white-soraya w-80 pl-2"
                   required
                 />
               </div>
@@ -169,7 +169,7 @@ export default function Authentification() {
               <div className="flex items-center justify-between">
                 <button
                   type="submit"
-                  className="text-sm p-2 mt-1 font-semibold border rounded-full border-slate-500 w-80 text-white bg-black cursor-pointer hover:bg-white hover:text-black hover:shadow-xl transition-all duration-300 transform-gpu hover:scale-90"
+                  className="font-inter text-sm p-2 font-bold border rounded-lg border-slate-500 w-80 text-white bg-black cursor-pointer hover:bg-color-black-soraya"
                 >
                   Connexion
                 </button>

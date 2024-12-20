@@ -285,21 +285,21 @@ export default function Retours() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
-                    <div className="mt-10 ml-10">
+                <div className="p-8 w-full max-w-5xl">
+                    <div className="text-center flex mt-20">
                         <h1 className="font-bold text-3xl">Retours</h1>
                     </div>
 
                     {/* Inversion des positions : Input pour SKU à gauche, sélection du dépôt à droite */}
-                    <div className="flex mt-10 ml-10 space-x-4">
+                    <div className="flex mt-10 space-x-4">
                         {/* Input pour saisir le SKU */}
                         <div className="flex-grow">
                             <form onSubmit={handleSubmit}>
                                 <label className="font-bold">Saisir un SKU :</label>
                                 <input
-                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
+                                    className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
                                     type="text"
                                     placeholder="Saisir votre article"
                                     value={sku}
@@ -314,7 +314,7 @@ export default function Retours() {
                         <div className="flex-grow">
                             <label className="font-bold">Sélectionner un dépôt :</label>
                             <select
-                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                className="border border-gray-300 rounded-lg p-2 mt-2 w-full"
                                 value={selectedDepotId || ""}
                                 onChange={(e) => setSelectedDepotId(Number(e.target.value))}
                             >
@@ -328,13 +328,13 @@ export default function Retours() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 ml-10">
-                            <p className="text-red-500 font-semibold">{error}</p>
+                        <div className="mt-4">
+                            <p className="text-red-500 font-semibold text-center">{error}</p>
                         </div>
                     )}
 
-                    <div className="mt-10 ml-10">
-                        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
+                    <div className="mt-10">
+                        <table className="w-full bg-white rounded-lg overflow-hidden shadow-lg mt-5">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-left text-sm font-bold text-white">Nom du produit</th>
@@ -389,7 +389,7 @@ export default function Retours() {
 
                     <div className="flex justify-end mt-10">
                         <button
-                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
                             onClick={handleValidateRetour}
                         >
                             Valider le retour
@@ -423,7 +423,7 @@ export default function Retours() {
 
                                 <div className="flex justify-end">
                                     <button
-                                        className="mt-5 w-full bg-black text-white p-2 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                                        className="mt-5 w-full bg-black text-white p-2 rounded-lg font-bold hover:bg-color-black-soraya"
                                         onClick={handleConfirmRetour}
                                     >
                                         Confirmer le retour

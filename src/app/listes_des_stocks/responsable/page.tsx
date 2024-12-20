@@ -175,14 +175,14 @@ export default function ListeDesStock() {
     });
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen justify-center">
             <Layout>
-                <div className="ml-64 p-8 w-full">
-                    <div className="mt-10 ml-10">
+                <div className="p-8 w-full max-w-5xl">
+                    <div className="text-center flex mt-20">
                         <h1 className="font-bold text-3xl">Listes des stocks</h1>
                     </div>
 
-                    <div className="ml-10 mt-4">
+                    <div className="mt-4">
                         <select
                             value={selectedDepot ?? ""}
                             onChange={(e) => setSelectedDepot(Number(e.target.value))}
@@ -199,7 +199,7 @@ export default function ListeDesStock() {
                         </select>
                     </div>
 
-                    <div className="ml-10 mt-4">
+                    <div className="mt-4">
                         <input
                             type="text"
                             placeholder="Rechercher un produit"
@@ -209,7 +209,7 @@ export default function ListeDesStock() {
                         />
                     </div>
 
-                    <div className="mt-10 ml-10 w-full max-w-4xl">
+                    <div className="mt-10 w-full max-w-4xl">
                         {loading ? (
                             <p className="text-center text-gray-500">Chargement des stocks...</p>
                         ) : (
