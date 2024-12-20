@@ -10,6 +10,7 @@ interface Product {
     sku: string;
     stock_quantity?: number | null; // Pour WooCommerce
     stock?: StockItem[]; // Pour stocks locaux
+    variations: Variation[];
 }
 
 interface StockItem {
@@ -45,7 +46,7 @@ const fetchWooCommerceProducts = async (): Promise<Product[]> => {
             { headers: { "Content-Type": "application/json" } }
         );
         const data = await response.json();
-        return data.flatMap((product: any) =>
+        return data.flatMap((product: Product) =>
             product.variations.map((variation: Variation) => ({
                 id: variation.id,
                 name: variation.name,
