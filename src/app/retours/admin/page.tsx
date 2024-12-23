@@ -38,13 +38,9 @@ export default function Retours() {
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
     const [filteredStock, setFilteredStock] = useState<ProductStock[]>([]); // Produits filtrés par recherche
-    const [stock, setStock] = useState<ProductStock[]>([]); // Tous les produits du dépôt
     const [error, setError] = useState("");
-    const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
-
-    const action = "Retour de stock";
 
     // Fonction pour récupérer tous les dépôts
     const fetchAllDepots = async () => {
@@ -360,7 +356,7 @@ export default function Retours() {
                             </thead>
                             <tbody>
                                 {products.length > 0 ? (
-                                    products.map((product, index) => (
+                                    products.map((product) => (
                                         <tr key={product.sku} className="border-t">
                                             <td className="py-2 px-4">{product.name}</td>
                                             <td className="py-2 px-4">{product.sku}</td>

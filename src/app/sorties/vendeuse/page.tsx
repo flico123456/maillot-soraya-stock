@@ -35,8 +35,6 @@ export default function Sorties() {
     const [stock, setStock] = useState<ProductStock[]>([]); // Tous les produits du dépôt
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
-
-    const action = "Sortie de stock";
     const [username, setUsername] = useState<string | null>(null);
 
     useEffect(() => {

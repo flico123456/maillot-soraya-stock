@@ -40,8 +40,6 @@ export default function Retours() {
     const [stock, setStock] = useState<ProductStock[]>([]); // Tous les produits du dépôt
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
-
-    const action = "Retour de stock"; // Action pour le log
     const [username, setUsername] = useState<string | null>(null);
 
     useEffect(() => {
