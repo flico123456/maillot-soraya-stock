@@ -3,6 +3,7 @@
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ButtonClassique from "@/app/components/Button-classique";
 
 interface ProductEntry {
     name: string;
@@ -43,6 +44,9 @@ export default function Retours() {
     const action = "Retour de stock"; // Action pour le PDF
     const [username, setUsername] = useState<string | null>(null);
     const [userLocalisation, setUserLocalisation] = useState<string | null>(null); // Localisation de l'utilisateur
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredStock, setFilteredStock] = useState<ProductStock[]>([]); // Produits filtrés par recherche
 
     useEffect(() => {
         const storedUsername = localStorage.getItem('username');
@@ -284,6 +288,39 @@ export default function Retours() {
         }
     };
 
+    const handleSearch = async (term: string) => {
+        setSearchTerm(term);
+
+        if (!term.trim()) {
+            setFilteredStock([]);
+            return;
+        }
+
+        const allProducts = await fetchProductsByDepot();
+        const filtered = allProducts.flat().filter((product: ProductStock) =>
+            product.nom_produit.toLowerCase().includes(term.toLowerCase())
+        );
+
+        setFilteredStock(filtered);
+    };
+
+    const addProduct = (product: ProductStock) => {
+        const existingProduct = products.find((p) => p.sku === product.sku);
+        if (existingProduct) {
+            setProducts((prevProducts) =>
+                prevProducts.map((p) =>
+                    p.sku === product.sku ? { ...p, quantity: p.quantity + 1 } : p
+                )
+            );
+        } else {
+            setProducts((prevProducts) => [
+                ...prevProducts,
+                { name: product.nom_produit, sku: product.sku, quantity: 1 },
+            ]);
+        }
+    };
+
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -326,6 +363,31 @@ export default function Retours() {
                             </select>
                         </div>
                     </div>
+
+                    <div className="mt-4">
+                        <label className="font-bold">Rechercher un produit :</label>
+                        <input
+                            className="border border-gray-300 rounded-lg p-2 w-full"
+                            type="text"
+                            placeholder="Rechercher un produit par nom"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+
+                    {filteredStock.length > 0 && (
+                        <div className="mt-4 bg-white p-4 rounded shadow">
+                            {filteredStock.map((product) => (
+                                <div
+                                    key={product.sku}
+                                    className="flex justify-between items-center border-b py-2"
+                                >
+                                    <p>{product.nom_produit}</p>
+                                    <ButtonClassique onClick={() => addProduct(product)} className='font-medium'>Ajouter</ButtonClassique>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mt-4">

@@ -3,6 +3,7 @@
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ButtonClassique from "@/app/components/Button-classique";
 
 interface ProductEntry {
     name: string;
@@ -25,33 +26,33 @@ interface ProductStock {
 
 export default function Sorties() {
     const [sku, setSku] = useState("");
+    const [searchTerm, setSearchTerm] = useState(""); // Recherche par nom
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depot, setDepot] = useState<Depot | null>(null);
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
-    const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
+    const [filteredStock, setFilteredStock] = useState<ProductStock[]>([]); // Produits filtrés par recherche
+    const [stock, setStock] = useState<ProductStock[]>([]); // Tous les produits du dépôt
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
-    const action = "Sortie de stock"; // Action pour le PDF
-
+    const action = "Sortie de stock";
     const [username, setUsername] = useState<string | null>(null);
 
     useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
+        const storedUsername = localStorage.getItem("username");
         setUsername(storedUsername);
     }, []);
 
     const fetchDepotByUsername = async () => {
         try {
-            const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
-            const depots = await response.json();
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/depots/select");
+            const depots: Depot[] = await response.json();
 
-            const userDepot = depots.find((depot: Depot) => depot.username_associe === username);
-            setDepot(userDepot);
+            const userDepot = depots.find((depot) => depot.username_associe === username);
+            setDepot(userDepot || null);
         } catch (error) {
             setError("Erreur lors de la récupération du dépôt.");
-        } finally {
         }
     };
 
@@ -64,104 +65,97 @@ export default function Sorties() {
     const fetchProductsByDepot = async () => {
         if (!depot) {
             setError("Dépôt non trouvé.");
-            return [];
+            return;
         }
 
         try {
-            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${depot.id}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await fetch(
+                `https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${depot.id}`,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-            const data = await response.json();
-            return data.map((item: ProductStock) => JSON.parse(item.stock) as ProductStock[]);
+            const data: { stock: string }[] = await response.json();
+            const stockItems: ProductStock[] = data.flatMap((item) =>
+                JSON.parse(item.stock) as ProductStock[]
+            );
+
+            setStock(stockItems);
         } catch (error) {
             setError("Erreur lors de la récupération des produits du dépôt.");
-            return [];
         }
     };
 
-    const fetchProductBySku = async () => {
-        setError("");
-
-        try {
-            const stocks = await fetchProductsByDepot();
-            let foundProduct: ProductStock | null = null;
-            stocks.forEach((productArray: ProductStock[]) => {
-                const product = productArray.find((p) => p.sku === sku);
-                if (product) {
-                    foundProduct = product;
-                    setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
-                }
-            });
-
-            if (!foundProduct) {
-                setError("Aucun produit trouvé pour ce SKU dans le dépôt.");
-            } else {
-                const existingProduct = products.find((p) => p.sku === foundProduct!.sku);
-                if (existingProduct) {
-                    setProducts((prevProducts) =>
-                        prevProducts.map((p) =>
-                            p.sku === foundProduct!.sku ? { ...p, quantity: p.quantity + 1 } : p
-                        )
-                    );
-                } else {
-                    setProducts((prevProducts) => [
-                        ...prevProducts,
-                        { name: foundProduct!.nom_produit, sku: foundProduct!.sku, quantity: 1 },
-                    ]);
-                }
-            }
-        } catch (error) {
-            setError("Erreur lors de la récupération du produit.");
-        } finally {
+    useEffect(() => {
+        if (depot) {
+            fetchProductsByDepot();
         }
+    }, [depot]);
+
+    const handleSearch = (term: string) => {
+        setSearchTerm(term);
+        setFilteredStock(
+            stock.filter((product) =>
+                product.nom_produit.toLowerCase().includes(term.toLowerCase())
+            )
+        );
     };
 
-    const handleValidateSortie = async () => {
+    const handleValidateSortie = () => {
         if (!depot || products.length === 0) {
             setError("Aucun produit sélectionné ou dépôt non trouvé.");
             return;
         }
-
-        for (const product of products) {
-            const stockDisponible = availableStock[product.sku] || 0;
-            if (product.quantity > stockDisponible) {
-                setError(`Quantité demandée pour le produit ${product.sku} dépasse le stock disponible (${stockDisponible}).`);
-                return;
-            }
-        }
-
         setShowMotifModal(true);
     };
 
-    const createLog = async () => {
-        try {
-            const logContent = products.map((product) => ({
-                sku: product.sku,
-                nom_produit: product.name,
-                quantite: product.quantity,
-            }));
+    const addProduct = (product: ProductStock) => {
+        const existingProduct = products.find((p) => p.sku === product.sku);
+        if (existingProduct) {
+            setProducts((prevProducts) =>
+                prevProducts.map((p) =>
+                    p.sku === product.sku ? { ...p, quantity: p.quantity + 1 } : p
+                )
+            );
+        } else {
+            setProducts((prevProducts) => [
+                ...prevProducts,
+                { name: product.nom_produit, sku: product.sku, quantity: 1 },
+            ]);
+        }
+    };
 
-            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    action_log: action,
-                    nom_log: selectedMotif,
-                    depot_id: depot?.id,
-                    contenu_log: JSON.stringify(logContent),
-                }),
-            });
+    const fetchProductBySku = () => {
+        const product = stock.find((p) => p.sku === sku);
+        if (product) {
+            addProduct(product);
+            setError("");
+        } else {
+            setError("Aucun produit trouvé pour ce SKU dans le dépôt.");
+        }
+        setSku(""); // Réinitialise le champ SKU
+    };
 
-            if (!response.ok) {
-                setError("Erreur lors de la création du log.");
-            }
-        } catch (error) {
-            setError("Erreur lors de la création du log.");
+    const updateQuantity = (index: number, newQuantity: number) => {
+        setProducts((prevProducts) =>
+            prevProducts.map((product, i) =>
+                i === index ? { ...product, quantity: newQuantity } : product
+            )
+        );
+        setEditingQuantityIndex(null);
+    };
+
+    const deleteProduct = (sku: string) => {
+        setProducts(products.filter((product) => product.sku !== sku));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (sku.trim() !== "") {
+            fetchProductBySku();
         }
     };
 
@@ -191,7 +185,7 @@ export default function Sorties() {
                 }
             }
 
-            await createLog();
+            // Log
 
             alert("Sortie validée avec succès.");
             setProducts([]);
@@ -203,41 +197,6 @@ export default function Sorties() {
         }
     };
 
-    const deleteProduct = (sku: string) => {
-        setProducts(products.filter((product) => product.sku !== sku));
-    };
-
-    const handleQuantityEdit = (index: number) => {
-        setEditingQuantityIndex(index);
-    };
-
-    const updateQuantity = (index: number, newQuantity: number) => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product, i) =>
-                i === index ? { ...product, quantity: newQuantity } : product
-            )
-        );
-        setEditingQuantityIndex(null);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (sku.trim() !== "") {
-            fetchProductBySku();
-            setSku(""); // Réinitialise le champ SKU après la soumission
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            e.preventDefault(); // Empêche le comportement par défaut
-            if (sku.trim() !== "") {
-                fetchProductBySku();
-                setSku(""); // Réinitialise le champ SKU après l'ajout du produit
-            }
-        }
-    };
-
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -246,21 +205,50 @@ export default function Sorties() {
                         <h1 className="font-bold text-3xl">Sorties</h1>
                     </div>
 
-                    <div className="flex mt-10 space-x-4">
+                    {/* Aligner les deux champs d'entrée */}
+                    <div className="flex flex-col md:flex-row mt-10 space-y-4 md:space-y-0 md:space-x-4">
                         <div className="flex-grow">
                             <form onSubmit={handleSubmit}>
                                 <input
-                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
+                                    className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
                                     type="text"
-                                    placeholder="Saisir votre article"
+                                    placeholder="Saisir le SKU du produit"
                                     value={sku}
                                     onChange={(e) => setSku(e.target.value)}
-                                    onKeyDown={handleKeyDown} // Écoute la touche "Entrée"
                                     required
                                 />
                             </form>
                         </div>
+
+                        <div className="flex-grow">
+                            <input
+                                className="border border-gray-300 rounded-lg p-2 w-96"
+                                type="text"
+                                placeholder="Rechercher un produit par nom"
+                                value={searchTerm}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
+
+                    {/* Liste déroulante des produits filtrés */}
+                    {searchTerm && (
+                        <div className="mt-4 bg-white p-4 rounded shadow">
+                            {filteredStock.length > 0 ? (
+                                filteredStock.map((product: ProductStock) => (
+                                    <div
+                                        key={product.sku}
+                                        className="flex justify-between items-center border-b py-2"
+                                    >
+                                        <p>{product.nom_produit}</p>
+                                        <ButtonClassique onClick={() => addProduct(product)} className='font-medium'>Ajouter</ButtonClassique>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500">Aucun produit trouvé</p>
+                            )}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mt-4 text-center">
@@ -286,7 +274,7 @@ export default function Sorties() {
                                             <td className="py-2 px-4">{product.sku}</td>
                                             <td
                                                 className="py-2 px-4 cursor-pointer"
-                                                onDoubleClick={() => handleQuantityEdit(index)}
+                                                onDoubleClick={() => setEditingQuantityIndex(index)}
                                             >
                                                 {editingQuantityIndex === index ? (
                                                     <input
@@ -321,10 +309,9 @@ export default function Sorties() {
                             </tbody>
                         </table>
                     </div>
-
                     <div className="flex justify-end mt-10">
                         <button
-                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            className="bg-black text-white p-3 rounded-lg font-bold hover:bg-gray-700 transition-all"
                             onClick={handleValidateSortie}
                         >
                             Valider la sortie
@@ -333,31 +320,35 @@ export default function Sorties() {
 
                     {showMotifModal && (
                         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-                            <div className="bg-white p-8 rounded-lg shadow-lg relative max-w-lg w-full"> {/* Agrandir le modal */}
-                                {/* Croix pour fermer le modal */}
+                            <div className="bg-white p-8 rounded-lg shadow-lg relative max-w-lg w-full">
+                                {/* Bouton pour fermer le modal */}
                                 <Image
-                                    alt="img-close"
+                                    alt="Fermer"
                                     src="/close-icon.svg"
-                                    width={32}
-                                    height={32}
+                                    width={24}
+                                    height={24}
                                     className="absolute top-3 right-3 cursor-pointer"
-                                    onClick={() => setShowMotifModal(false)} // Fermer le modal
+                                    onClick={() => setShowMotifModal(false)}
                                 />
 
-                                <h2 className="text-xl font-bold mb-6">Sélectionner le motif de sortie</h2>
+                                <h2 className="text-xl font-bold mb-6">Sélectionnez le motif de la sortie</h2>
+
                                 <select
                                     value={selectedMotif || ""}
                                     onChange={(e) => setSelectedMotif(e.target.value)}
-                                    className="border border-gray-300 rounded p-2 w-full mb-4"
+                                    className="border border-gray-300 rounded-lg p-2 w-full mb-4"
                                 >
-                                    <option value="" disabled>Choisir un motif</option>
+                                    <option value="" disabled>
+                                        Choisissez un motif
+                                    </option>
                                     <option value="Vente">Vente</option>
-                                    <option value="Offert">Offert</option>
+                                    <option value="Erreur">Erreur</option>
+                                    <option value="Perte">Perte</option>
                                 </select>
 
-                                <div className="flex justify-end">
+                                <div className="flex justify-end mt-5">
                                     <button
-                                        className="mt-5 w-full bg-black text-white p-2 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                                        className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-700 transition-all"
                                         onClick={handleConfirmSortie}
                                     >
                                         Confirmer la sortie

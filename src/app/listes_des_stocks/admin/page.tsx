@@ -95,11 +95,13 @@ const fetchDepots = async (): Promise<Depot[]> => {
 
 export default function ListeDesStock() {
     const [productList, setProductList] = useState<Product[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [depotList, setDepotList] = useState<Depot[]>([]);
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [role, setRole] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     // Récupérer le rôle et le nom d'utilisateur depuis localStorage
     useEffect(() => {
@@ -133,9 +135,11 @@ export default function ListeDesStock() {
                 if (selectedDepot === 1) {
                     const products = await fetchWooCommerceProducts();
                     setProductList(products);
+                    setFilteredProducts(products);
                 } else {
                     const products = await fetchLocalStock(selectedDepot);
                     setProductList(products);
+                    setFilteredProducts(products);
                 }
             } catch (error) {
                 console.error("Erreur lors de la récupération des stocks :", error);
@@ -145,6 +149,15 @@ export default function ListeDesStock() {
         };
         fetchStock();
     }, [selectedDepot]);
+
+    // Filtrer les produits en fonction de la recherche
+    useEffect(() => {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        const filtered = productList.filter((product) =>
+            product.name.toLowerCase().includes(lowerCaseQuery)
+        );
+        setFilteredProducts(filtered);
+    }, [searchQuery, productList]);
 
     return (
         <div className="flex min-h-screen justify-center">
@@ -156,7 +169,7 @@ export default function ListeDesStock() {
                             <select
                                 value={selectedDepot ?? ""}
                                 onChange={(e) => setSelectedDepot(Number(e.target.value))}
-                                className="border rounded-full p-2"
+                                className="border rounded-lg p-2"
                             >
                                 <option value="" disabled>Sélectionner un dépôt</option>
                                 {depotList.map((depot) => (
@@ -165,10 +178,19 @@ export default function ListeDesStock() {
                             </select>
                         </div>
                     )}
+                    <div className="flex justify-center mt-4">
+                        <input
+                            type="text"
+                            placeholder="Rechercher un produit"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="border rounded-lg p-2 w-full max-w-md"
+                        />
+                    </div>
                     {loading ? (
                         <p className="text-gray-500 text-center mt-10">Chargement des stocks...</p>
                     ) : (
-                        <table className="w-full mt-10 bg-white rounded-lg shadow-lg">
+                        <table className="w-800 mt-10 bg-white rounded-lg shadow-lg">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-white">SKU</th>
@@ -177,8 +199,8 @@ export default function ListeDesStock() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {productList.length > 0 ? (
-                                    productList.map((product) => (
+                                {filteredProducts.length > 0 ? (
+                                    filteredProducts.map((product) => (
                                         <tr key={product.id} className="border-t">
                                             <td className="py-2 px-4">{product.sku || "Non disponible"}</td>
                                             <td className="py-2 px-4">{product.name}</td>

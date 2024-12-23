@@ -3,6 +3,7 @@
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ButtonClassique from "@/app/components/Button-classique";
 
 interface ProductEntry {
     name: string;
@@ -32,18 +33,20 @@ const SAINT_CANNAT_ID = 1; // ID de Saint-Cannat
 
 export default function Retours() {
     const [sku, setSku] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     const [products, setProducts] = useState<ProductEntry[]>([]);
     const [depots, setDepots] = useState<Depot[]>([]); // Liste de tous les dépôts disponibles
     const [selectedDepotId, setSelectedDepotId] = useState<number | null>(null); // Le dépôt sélectionné
+    const [filteredStock, setFilteredStock] = useState<ProductStock[]>([]); // Produits filtrés par recherche
+    const [stock, setStock] = useState<ProductStock[]>([]); // Tous les produits du dépôt
     const [error, setError] = useState("");
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null);
-    //const [availableStock, setAvailableStock] = useState<{ [sku: string]: number }>({});
     const [showMotifModal, setShowMotifModal] = useState(false);
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
 
-    const action = "Retour de stock"; // Action pour le PDF
+    const action = "Retour de stock";
 
-    // Fonction pour récupérer tous les dépôts sans filtre
+    // Fonction pour récupérer tous les dépôts
     const fetchAllDepots = async () => {
         try {
             const response = await fetch('https://apistock.maillotsoraya-conception.com:3001/depots/select');
@@ -62,9 +65,8 @@ export default function Retours() {
         }
     };
 
-    // Appeler l'API pour récupérer tous les dépôts au chargement de la page
     useEffect(() => {
-        fetchAllDepots(); // Appeler cette fonction sans filtrer les dépôts
+        fetchAllDepots();
     }, []);
 
     const fetchProductsByDepot = async () => {
@@ -75,43 +77,49 @@ export default function Retours() {
 
         try {
             if (selectedDepotId === SAINT_CANNAT_ID) {
-                const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`, {
+                // Recherche spécifique par SKU si disponible
+                const url = sku
+                    ? `https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`
+                    : `https://maillotsoraya-conception.com/wp-json/wc/v3/products`;
+
+                const response = await fetch(url, {
                     headers: {
                         Authorization:
                             "Basic " +
-                            btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+                            btoa(
+                                "ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"
+                            ),
                     },
                 });
+
                 if (!response.ok) {
                     throw new Error("Erreur lors de la récupération des produits via WooCommerce.");
                 }
+
                 const data = await response.json();
-                if (data.length === 0) {
-                    setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
-                    return [];
-                }
+
+                // Retourne les produits formatés pour WooCommerce
                 return data.map((product: Product) => ({
                     nom_produit: product.name,
                     sku: product.sku,
                     quantite: product.stock_quantity,
                 }));
             } else {
-                const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${selectedDepotId}`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
+                // API locale pour les autres dépôts
+                const response = await fetch(
+                    `https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/select/${selectedDepotId}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
 
                 if (!response.ok) {
                     throw new Error("Erreur lors de la récupération des produits du dépôt local.");
                 }
 
                 const data = await response.json();
-                if (data.length === 0) {
-                    setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
-                    return [];
-                }
-
                 const stockItems = data.flatMap((item: { stock: string }) =>
                     JSON.parse(item.stock) as ProductStock[]
                 );
@@ -124,43 +132,69 @@ export default function Retours() {
         }
     };
 
+    const handleSearch = async (term: string) => {
+        setSearchTerm(term);
+
+        if (!term.trim()) {
+            setFilteredStock([]);
+            return;
+        }
+
+        const allProducts = await fetchProductsByDepot();
+        const filtered = allProducts.filter((product: { nom_produit: string; }) =>
+            product.nom_produit.toLowerCase().includes(term.toLowerCase())
+        );
+
+        setFilteredStock(filtered);
+    };
+
+    const addProduct = (product: ProductStock) => {
+        const existingProduct = products.find((p) => p.sku === product.sku);
+        if (existingProduct) {
+            setProducts((prevProducts) =>
+                prevProducts.map((p) =>
+                    p.sku === product.sku ? { ...p, quantity: p.quantity + 1 } : p
+                )
+            );
+        } else {
+            setProducts((prevProducts) => [
+                ...prevProducts,
+                { name: product.nom_produit, sku: product.sku, quantity: 1 },
+            ]);
+        }
+    };
+
+    const deleteProduct = (sku: string) => {
+        setProducts(products.filter((product) => product.sku !== sku));
+    };
+
     const fetchProductBySku = async () => {
         setError("");
 
         try {
             const stocks = await fetchProductsByDepot();
-            let foundProduct: ProductStock | null = null;
-            for (const product of stocks) {
-                if (product.sku === sku) {
-                    foundProduct = product;
-                    //setAvailableStock((prev) => ({ ...prev, [product.sku]: product.quantite }));
-                    break;
-                }
-            }
+            const foundProduct = stocks.find((product: { sku: string; }) => product.sku === sku);
 
             if (!foundProduct) {
                 setError("Aucun produit trouvé pour ce SKU dans le dépôt sélectionné.");
             } else {
-                const existingProduct = products.find((p) => p.sku === foundProduct!.sku);
-                if (existingProduct) {
-                    setProducts((prevProducts) =>
-                        prevProducts.map((p) =>
-                            p.sku === foundProduct!.sku ? { ...p, quantity: p.quantity + 1 } : p
-                        )
-                    );
-                } else {
-                    setProducts((prevProducts) => [
-                        ...prevProducts,
-                        { name: foundProduct!.nom_produit, sku: foundProduct!.sku, quantity: 1 },
-                    ]);
-                }
+                addProduct(foundProduct);
+                setSku(""); // Réinitialise le champ SKU
             }
         } catch (error) {
             setError("Erreur lors de la récupération du produit.");
-        } finally {
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Empêche le comportement par défaut
+            if (sku.trim() !== "") {
+                fetchProductBySku();
+                setSku(""); // Réinitialise le champ SKU après l'ajout du produit
+            }
+        }
+    };
 
     const handleValidateRetour = async () => {
         if (!selectedDepotId || products.length === 0) {
@@ -169,35 +203,6 @@ export default function Retours() {
         }
 
         setShowMotifModal(true);
-    };
-
-    const createLog = async () => {
-        try {
-            const logContent = products.map((product) => ({
-                sku: product.sku,
-                nom_produit: product.name,
-                quantite: product.quantity,
-            }));
-
-            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
-                method: 'POST',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    action_log: action,
-                    nom_log: selectedMotif,
-                    depot_id: selectedDepotId,
-                    contenu_log: JSON.stringify(logContent),
-                }),
-            });
-
-            if (!response.ok) {
-                setError("Erreur lors de la création du log.");
-            }
-        } catch (error) {
-            setError("Erreur lors de la création du log.");
-        }
     };
 
     const handleConfirmRetour = async () => {
@@ -260,7 +265,7 @@ export default function Retours() {
                 }
             }
 
-            await createLog();
+            // Log
 
             alert("Retour validé avec succès.");
             setProducts([]);
@@ -275,41 +280,6 @@ export default function Retours() {
         }
     };
 
-    const deleteProduct = (sku: string) => {
-        setProducts(products.filter((product) => product.sku !== sku));
-    };
-
-    const handleQuantityEdit = (index: number) => {
-        setEditingQuantityIndex(index);
-    };
-
-    const updateQuantity = (index: number, newQuantity: number) => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product, i) =>
-                i === index ? { ...product, quantity: newQuantity } : product
-            )
-        );
-        setEditingQuantityIndex(null);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (sku.trim() !== "") {
-            fetchProductBySku();
-            setSku(""); // Réinitialise le champ SKU après la soumission
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            e.preventDefault(); // Empêche le comportement par défaut
-            if (sku.trim() !== "") {
-                fetchProductBySku(); 0
-                setSku(""); // Réinitialise le champ SKU après l'ajout du produit
-            }
-        }
-    };
-
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -318,25 +288,19 @@ export default function Retours() {
                         <h1 className="font-bold text-3xl">Retours</h1>
                     </div>
 
-                    {/* Inversion des positions : Input pour SKU à gauche, sélection du dépôt à droite */}
                     <div className="mt-10 flex justify-between space-x-4">
-                        {/* Input pour saisir le SKU */}
                         <div className="flex-grow">
-                            <form onSubmit={handleSubmit}>
-                                <label className="font-bold">Saisir un SKU :</label>
-                                <input
-                                    className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
-                                    type="text"
-                                    placeholder="Saisir votre article"
-                                    value={sku}
-                                    onChange={(e) => setSku(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    required
-                                />
-                            </form>
+                            <label className="font-bold">Saisir un SKU :</label>
+                            <input
+                                className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
+                                type="text"
+                                placeholder="Saisir votre article"
+                                value={sku}
+                                onChange={(e) => setSku(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                            />
                         </div>
 
-                        {/* Sélection du dépôt */}
                         <div className="flex-grow">
                             <label className="font-bold">Sélectionner un dépôt :</label>
                             <select
@@ -352,6 +316,31 @@ export default function Retours() {
                             </select>
                         </div>
                     </div>
+
+                    <div className="mt-4">
+                        <label className="font-bold">Rechercher un produit :</label>
+                        <input
+                            className="border border-gray-300 rounded-lg p-2 w-full"
+                            type="text"
+                            placeholder="Rechercher un produit par nom"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+
+                    {filteredStock.length > 0 && (
+                        <div className="mt-4 bg-white p-4 rounded shadow">
+                            {filteredStock.map((product) => (
+                                <div
+                                    key={product.sku}
+                                    className="flex justify-between items-center border-b py-2"
+                                >
+                                    <p>{product.nom_produit}</p>
+                                    <ButtonClassique onClick={() => addProduct(product)} className='font-medium'>Ajouter</ButtonClassique>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mt-4 text-center">
@@ -375,23 +364,7 @@ export default function Retours() {
                                         <tr key={product.sku} className="border-t">
                                             <td className="py-2 px-4">{product.name}</td>
                                             <td className="py-2 px-4">{product.sku}</td>
-                                            <td
-                                                className="py-2 px-4 cursor-pointer"
-                                                onDoubleClick={() => handleQuantityEdit(index)}
-                                            >
-                                                {editingQuantityIndex === index ? (
-                                                    <input
-                                                        type="number"
-                                                        value={product.quantity}
-                                                        onChange={(e) =>
-                                                            updateQuantity(index, parseInt(e.target.value, 10))
-                                                        }
-                                                        className="border border-gray-300 rounded p-1"
-                                                    />
-                                                ) : (
-                                                    product.quantity
-                                                )}
-                                            </td>
+                                            <td className="py-2 px-4">{product.quantity}</td>
                                             <td className="py-2 px-4">
                                                 <button
                                                     className="text-red-500 hover:text-red-700"
@@ -412,7 +385,6 @@ export default function Retours() {
                             </tbody>
                         </table>
                     </div>
-
                     <div className="flex justify-end mt-10">
                         <button
                             className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
@@ -457,6 +429,7 @@ export default function Retours() {
                                 </div>
                             </div>
                         </div>
+
                     )}
                 </div>
             </Layout>

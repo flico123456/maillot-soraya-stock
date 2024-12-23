@@ -22,6 +22,7 @@ const config: Config = {
       },
       width: {
         '600': '800px',
+        '800': '800px',
       },
       maxHeight: {
         '600': '600px',

@@ -3,6 +3,7 @@
 import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ButtonClassique from "@/app/components/Button-classique";
 
 interface ProductEntry {
     name: string;
@@ -39,6 +40,9 @@ export default function Sorties() {
 
     const [username, setUsername] = useState<string | null>(null);
     const [userLocalisation, setUserLocalisation] = useState<string | null>(null); // Localisation de l'utilisateur
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredStock, setFilteredStock] = useState<ProductStock[]>([]); // Produits filtrés par recherche
 
     useEffect(() => {
         const storedUsername = localStorage.getItem('username');
@@ -155,6 +159,7 @@ export default function Sorties() {
 
         for (const product of products) {
             const stockDisponible = availableStock[product.sku] || 0;
+            console.log(stockDisponible + " " + product.quantity + " " + product.sku);
             if (product.quantity > stockDisponible) {
                 setError(`Quantité demandée pour le produit ${product.sku} dépasse le stock disponible (${stockDisponible}).`);
                 return;
@@ -266,6 +271,38 @@ export default function Sorties() {
         }
     };
 
+    const handleSearch = async (term: string) => {
+        setSearchTerm(term);
+
+        if (!term.trim()) {
+            setFilteredStock([]);
+            return;
+        }
+
+        const allProducts = await fetchProductsByDepot();
+        const filtered = allProducts.flat().filter((product: ProductStock) =>
+            product.nom_produit.toLowerCase().includes(term.toLowerCase())
+        );
+
+        setFilteredStock(filtered);
+    };
+
+    const addProduct = (product: ProductStock) => {
+        const existingProduct = products.find((p) => p.sku === product.sku);
+        if (existingProduct) {
+            setProducts((prevProducts) =>
+                prevProducts.map((p) =>
+                    p.sku === product.sku ? { ...p, quantity: p.quantity + 1 } : p
+                )
+            );
+        } else {
+            setProducts((prevProducts) => [
+                ...prevProducts,
+                { name: product.nom_produit, sku: product.sku, quantity: 1 },
+            ]);
+        }
+    };
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -280,7 +317,7 @@ export default function Sorties() {
                             <form onSubmit={handleSubmit}>
                                 <label className="font-bold">Saisir un SKU :</label>
                                 <input
-                                    className="border border-gray-300 rounded-full focus:outline-none focus:border-black transition p-2 w-full"
+                                    className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
                                     type="text"
                                     placeholder="Saisir votre article"
                                     value={sku}
@@ -295,7 +332,7 @@ export default function Sorties() {
                         <div className="flex-grow">
                             <label className="font-bold">Sélectionner un dépôt :</label>
                             <select
-                                className="border border-gray-300 rounded-full p-2 mt-2 w-full"
+                                className="border border-gray-300 rounded-lg p-2 mt-2 w-full"
                                 value={selectedDepotId || ""}
                                 onChange={(e) => setSelectedDepotId(Number(e.target.value))}
                             >
@@ -307,6 +344,31 @@ export default function Sorties() {
                             </select>
                         </div>
                     </div>
+
+                    <div className="mt-4">
+                        <label className="font-bold">Rechercher un produit :</label>
+                        <input
+                            className="border border-gray-300 rounded-lg p-2 w-full"
+                            type="text"
+                            placeholder="Rechercher un produit par nom"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+
+                    {filteredStock.length > 0 && (
+                        <div className="mt-4 bg-white p-4 rounded shadow">
+                            {filteredStock.map((product) => (
+                                <div
+                                    key={product.sku}
+                                    className="flex justify-between items-center border-b py-2"
+                                >
+                                    <p>{product.nom_produit}</p>
+                                    <ButtonClassique onClick={() => addProduct(product)} className='font-medium'>Ajouter</ButtonClassique>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mt-4">
@@ -370,7 +432,7 @@ export default function Sorties() {
 
                     <div className="flex justify-end mt-10">
                         <button
-                            className="bg-black text-white p-3 rounded-full font-bold hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                            className="bg-black text-white p-3 rounded-lg font-bold hover:bg-color-black-soraya"
                             onClick={handleValidateSortie}
                         >
                             Valider la sortie
