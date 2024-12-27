@@ -174,6 +174,15 @@ export default function ListeDesStock() {
         );
     });
 
+    // Calculer le total des quantités
+    const calculateTotalQuantity = () => {
+        return filteredProducts.reduce((total, product) => {
+            return (
+                total + (product.stock?.reduce((sum, item) => sum + item.quantite, 0) || 0)
+            );
+        }, 0);
+    };
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -244,6 +253,12 @@ export default function ListeDesStock() {
                                                 <td colSpan={3} className="py-4 text-center text-gray-500">
                                                     Aucun produit disponible
                                                 </td>
+                                            </tr>
+                                        )}
+                                        {filteredProducts.length > 0 && (
+                                            <tr className="font-bold border-t bg-gray-100">
+                                                <td colSpan={2} className="py-2 px-4 text-right">Total</td>
+                                                <td className="py-2 px-4">{calculateTotalQuantity()}</td>
                                             </tr>
                                         )}
                                     </tbody>

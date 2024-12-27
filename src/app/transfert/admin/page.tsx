@@ -288,6 +288,12 @@ export default function TransfertAdmin() {
         }
     };
 
+    // Calculer le total des quantités
+    const calculateTotalQuantity = () => {
+        return products.reduce((total, product) => total + product.quantity, 0);
+    };
+
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -396,6 +402,12 @@ export default function TransfertAdmin() {
                                         <td colSpan={4} className="text-center py-4 text-gray-500">
                                             Aucun produit ajouté pour le moment
                                         </td>
+                                    </tr>
+                                )}
+                                {products.length > 0 && (
+                                    <tr className="font-bold border-t">
+                                        <td colSpan={2} className="py-2 px-4 text-right">Total</td>
+                                        <td className="py-2 px-4">{calculateTotalQuantity()}</td>
                                     </tr>
                                 )}
                             </tbody>

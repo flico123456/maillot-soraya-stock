@@ -1,7 +1,9 @@
 'use client';
 
+import ButtonClassique from "@/app/components/Button-classique";
 import Layout from "../../components/Layout";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 // Interfaces pour le typage
 interface Product {
@@ -10,7 +12,7 @@ interface Product {
     sku: string;
     stock_quantity?: number | null; // Pour WooCommerce
     stock?: StockItem[]; // Pour stocks locaux
-    variations: Variation[];
+    categories?: string[]; // Liste des catégories
 }
 
 interface StockItem {
@@ -23,6 +25,7 @@ interface Variation {
     id: number;
     name: string;
     sku: string;
+    categories: string;
     stock_quantity: number | null;
 }
 
@@ -38,6 +41,11 @@ interface DepotStockResponse {
     stock: string; // Chaîne JSON représentant le stock
 }
 
+interface Category {
+    id: number;
+    name: string;
+}
+
 // Fonction pour récupérer les produits WooCommerce
 const fetchWooCommerceProducts = async (): Promise<Product[]> => {
     try {
@@ -46,12 +54,15 @@ const fetchWooCommerceProducts = async (): Promise<Product[]> => {
             { headers: { "Content-Type": "application/json" } }
         );
         const data = await response.json();
-        return data.flatMap((product: Product) =>
-            product.variations.map((variation: Variation) => ({
+
+        // Extraire les variations et inclure les catégories
+        return data.flatMap((product: any) =>
+            product.variations.map((variation: any) => ({
                 id: variation.id,
                 name: variation.name,
                 sku: variation.sku,
                 stock_quantity: variation.stock_quantity,
+                categories: variation.categories, // Inclure les catégories sous forme de tableau
             }))
         );
     } catch (error) {
@@ -73,6 +84,7 @@ const fetchLocalStock = async (depotId: number): Promise<Product[]> => {
                 id: item.id,
                 name: stockItem.nom_produit,
                 sku: stockItem.sku,
+                stock_quantity: stockItem.quantite, // Inclure la quantité ici
                 stock: [stockItem],
             }))
         );
@@ -93,54 +105,63 @@ const fetchDepots = async (): Promise<Depot[]> => {
     }
 };
 
+// Fonction pour récupérer les catégories
+const fetchCategories = async (): Promise<Category[]> => {
+    try {
+        const response = await fetch("https://maillotsoraya-conception.com/wp-json/wc/v3/products/categories", {
+            headers: {
+                Authorization: "Basic " + btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+            },
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Erreur lors de la récupération des catégories :", error);
+        return [];
+    }
+};
+
 export default function ListeDesStock() {
     const [productList, setProductList] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [depotList, setDepotList] = useState<Depot[]>([]);
     const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
-    const [role, setRole] = useState<string | null>(null);
-    const [username, setUsername] = useState<string | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [openFiltre, setOpenFiltre] = useState(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
 
-    // Récupérer le rôle et le nom d'utilisateur depuis localStorage
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            setRole(localStorage.getItem("role"));
-            setUsername(localStorage.getItem("username"));
-        }
+        const loadCategories = async () => {
+            const categories = await fetchCategories();
+            setCategories(categories);
+        };
+        loadCategories();
     }, []);
 
-    // Charger la liste des dépôts
     useEffect(() => {
         const loadDepots = async () => {
             const depots = await fetchDepots();
-            if (role === "vendeuse") {
-                const filteredDepots = depots.filter((depot) => depot.username_associe === username);
-                setDepotList(filteredDepots);
-                if (filteredDepots.length > 0) setSelectedDepot(filteredDepots[0].id);
-            } else {
-                setDepotList(depots);
-            }
+            setDepotList(depots);
         };
-        if (role) loadDepots();
-    }, [role, username]);
+        loadDepots();
+    }, []);
 
-    // Charger les stocks en fonction du dépôt sélectionné
     useEffect(() => {
         const fetchStock = async () => {
             if (!selectedDepot) return;
             setLoading(true);
+
             try {
+                let products: Product[] = [];
                 if (selectedDepot === 1) {
-                    const products = await fetchWooCommerceProducts();
-                    setProductList(products);
-                    setFilteredProducts(products);
+                    products = await fetchWooCommerceProducts();
                 } else {
-                    const products = await fetchLocalStock(selectedDepot);
-                    setProductList(products);
-                    setFilteredProducts(products);
+                    products = await fetchLocalStock(selectedDepot);
                 }
+                setProductList(products);
+                setFilteredProducts(products); // Met à jour les produits filtrés directement
+                setSelectedCategory(null); // Réinitialise les catégories
             } catch (error) {
                 console.error("Erreur lors de la récupération des stocks :", error);
             } finally {
@@ -150,47 +171,51 @@ export default function ListeDesStock() {
         fetchStock();
     }, [selectedDepot]);
 
-    // Filtrer les produits en fonction de la recherche
     useEffect(() => {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        const filtered = productList.filter((product) =>
-            product.name.toLowerCase().includes(lowerCaseQuery)
-        );
+        const filtered = productList.filter((product) => {
+            const matchesQuery = product.name.toLowerCase().includes(lowerCaseQuery);
+            const matchesCategory =
+                selectedCategory === null ||
+                (product.categories && product.categories.includes(selectedCategory));
+            return matchesQuery && matchesCategory;
+        });
+
         setFilteredProducts(filtered);
-    }, [searchQuery, productList]);
+    }, [productList, searchQuery, selectedCategory]);
+
+    const calculateTotalQuantity = () => {
+        return filteredProducts.reduce((total, product) => total + (product.stock_quantity || 0), 0);
+    };
 
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
                 <div className="p-8 w-full max-w-5xl">
                     <h1 className="font-bold text-3xl flex mt-20">Listes des stocks</h1>
-                    {role !== "vendeuse" && (
-                        <div className="flex justify-center mt-4">
-                            <select
-                                value={selectedDepot ?? ""}
-                                onChange={(e) => setSelectedDepot(Number(e.target.value))}
-                                className="border rounded-lg p-2"
-                            >
-                                <option value="" disabled>Sélectionner un dépôt</option>
-                                {depotList.map((depot) => (
-                                    <option key={depot.id} value={depot.id}>{depot.name}</option>
-                                ))}
-                            </select>
+                    <div className="flex justify-center mt-4">
+                        <select
+                            value={selectedDepot ?? ""}
+                            onChange={(e) => setSelectedDepot(Number(e.target.value))}
+                            className="border rounded-lg p-2"
+                        >
+                            <option value="" disabled>Sélectionner un dépôt</option>
+                            {depotList.map((depot) => (
+                                <option key={depot.id} value={depot.id}>{depot.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {selectedDepot === 1 && (
+                        <div className="flex justify-end mr-5">
+                            <ButtonClassique className="font-medium mt-14" onClick={() => setOpenFiltre(true)}>
+                                Filtrer
+                            </ButtonClassique>
                         </div>
                     )}
-                    <div className="flex justify-center mt-4">
-                        <input
-                            type="text"
-                            placeholder="Rechercher un produit"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="border rounded-lg p-2 w-full max-w-md"
-                        />
-                    </div>
                     {loading ? (
                         <p className="text-gray-500 text-center mt-10">Chargement des stocks...</p>
                     ) : (
-                        <table className="w-800 mt-10 bg-white rounded-lg shadow-lg">
+                        <table className="w-800 mt-3 bg-white rounded-lg shadow-lg">
                             <thead>
                                 <tr>
                                     <th className="py-2 px-4 bg-black text-white">SKU</th>
@@ -205,9 +230,7 @@ export default function ListeDesStock() {
                                             <td className="py-2 px-4">{product.sku || "Non disponible"}</td>
                                             <td className="py-2 px-4">{product.name}</td>
                                             <td className="py-2 px-4">
-                                                {product.stock_quantity ??
-                                                    product.stock?.map((item) => item.quantite).join(", ") ??
-                                                    "Non disponible"}
+                                                {product.stock_quantity ?? "Non disponible"}
                                             </td>
                                         </tr>
                                     ))
@@ -218,10 +241,45 @@ export default function ListeDesStock() {
                                         </td>
                                     </tr>
                                 )}
+                                {filteredProducts.length > 0 && (
+                                    <tr className="font-bold border-t bg-gray-100">
+                                        <td colSpan={2} className="py-2 px-4 text-right">Total</td>
+                                        <td className="py-2 px-4">{calculateTotalQuantity()}</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     )}
                 </div>
+                {openFiltre && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-lg relative max-w-lg w-full">
+                            <Image
+                                alt="img-close"
+                                src="/close-icon.svg"
+                                width={32}
+                                height={32}
+                                className="absolute top-3 right-3 cursor-pointer"
+                                onClick={() => setOpenFiltre(false)}
+                            />
+                            <h2 className="text-xl font-bold mb-6">Sélectionner un filtre</h2>
+                            <div className="flex justify-center mt-4">
+                                <select
+                                    value={selectedCategory ?? ""}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="border rounded-lg p-2"
+                                >
+                                    <option value="" disabled>Sélectionner une catégorie</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.name}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </Layout>
         </div>
     );
