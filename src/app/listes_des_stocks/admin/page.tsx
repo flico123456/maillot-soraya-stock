@@ -13,6 +13,7 @@ interface Product {
     stock_quantity?: number | null; // Pour WooCommerce
     stock?: StockItem[]; // Pour stocks locaux
     categories?: string[]; // Liste des catégories
+    variations: Variation[]; // Pour WooCommerce
 }
 
 interface StockItem {
@@ -56,8 +57,8 @@ const fetchWooCommerceProducts = async (): Promise<Product[]> => {
         const data = await response.json();
 
         // Extraire les variations et inclure les catégories
-        return data.flatMap((product: any) =>
-            product.variations.map((variation: any) => ({
+        return data.flatMap((product: Product) =>
+            product.variations.map((variation: Variation) => ({
                 id: variation.id,
                 name: variation.name,
                 sku: variation.sku,
@@ -129,7 +130,6 @@ export default function ListeDesStock() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [openFiltre, setOpenFiltre] = useState(false);
-    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
         const loadCategories = async () => {
@@ -172,17 +172,15 @@ export default function ListeDesStock() {
     }, [selectedDepot]);
 
     useEffect(() => {
-        const lowerCaseQuery = searchQuery.toLowerCase();
         const filtered = productList.filter((product) => {
-            const matchesQuery = product.name.toLowerCase().includes(lowerCaseQuery);
             const matchesCategory =
                 selectedCategory === null ||
                 (product.categories && product.categories.includes(selectedCategory));
-            return matchesQuery && matchesCategory;
+            return matchesCategory;
         });
 
         setFilteredProducts(filtered);
-    }, [productList, searchQuery, selectedCategory]);
+    }, [productList, selectedCategory]);
 
     const calculateTotalQuantity = () => {
         return filteredProducts.reduce((total, product) => total + (product.stock_quantity || 0), 0);
