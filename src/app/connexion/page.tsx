@@ -144,7 +144,6 @@ export default function Authentification() {
                   Identifiant
                 </label>
                 <input
-                  type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
