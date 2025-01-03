@@ -107,6 +107,31 @@ export default function TransfertResponsable() {
         }
     };
 
+        // Récupérer les produits via WooCommerce
+        const fetchProductFromWooCommerce = async (sku: string) => {
+            try {
+                const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`, {
+                    headers: {
+                        Authorization: "Basic " + btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+                    },
+                });
+                const productData = await response.json();
+                if (productData.length > 0) {
+                    const product = productData[0];
+                    return {
+                        id: product.id,
+                        parent_id: product.parent_id,
+                        name: product.name,
+                        sku: product.sku,
+                        quantity: product.stock_quantity,
+                    };
+                }
+            } catch (error) {
+                setError("Erreur lors de la récupération du produit via WooCommerce.");
+            }
+            return null;
+        };
+
     // Récupérer un produit par SKU dans le dépôt source
     const fetchProductBySku = async () => {
         if (!depotSourceId) {
@@ -163,6 +188,51 @@ export default function TransfertResponsable() {
         setProducts(products.filter((product) => product.sku !== sku));
     };
 
+        // Mettre à jour le stock WooCommerce pour une variation de produit
+        const updateWooCommerceStock = async (sku: string, quantityChange: number) => {
+            try {
+                // Étape 1 : Récupérer l'ID du produit à partir du SKU
+                const productData = await fetchProductFromWooCommerce(sku);
+                if (!productData) {
+                    throw new Error(`Produit avec le SKU ${sku} non trouvé.`);
+                }
+    
+                // Étape 2 : Utiliser l'ID parent et l'ID de la variation pour mettre à jour la quantité de stock
+                const productId = productData.parent_id;
+                const variationId = productData.id;
+                const currentQuantity = productData.quantity;
+    
+                if (!productId || !variationId) {
+                    throw new Error(`Produit parent ou variation non trouvés pour le SKU ${sku}.`);
+                }
+    
+                // Calculer la nouvelle quantité en déduisant `quantityChange`
+                const newQuantity = currentQuantity + quantityChange;
+    
+                const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products/${productId}/variations/${variationId}`, {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Basic " + btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+                    },
+                    body: JSON.stringify({
+                        stock_quantity: newQuantity,
+                    }),
+                });
+    
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de la mise à jour du stock WooCommerce pour le produit ${sku}`);
+                }
+            } catch (error) {
+                if (error instanceof Error) {
+                    setError(error.message);
+                } else {
+                    setError("An unknown error occurred.");
+                }
+            }
+        };
+    
+
     // Valider le transfert et créer un log
     const handleValidateTransfert = async () => {
         if (!depotSourceId || !depotDestinationId || products.length === 0) {
@@ -172,42 +242,40 @@ export default function TransfertResponsable() {
 
         try {
             for (const product of products) {
-                // Diminuer la quantité dans le dépôt source
-                const responseSource = await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotSourceId}`, {
-                    method: 'PUT',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        sku: product.sku,
-                        quantite: -product.quantity, // Réduire la quantité dans le dépôt source
-                    }),
-                });
-
-                if (!responseSource.ok) {
-                    setError(`Erreur lors de la mise à jour du dépôt source pour le produit ${product.sku}.`);
-                    continue;
-                }
-
-                // Augmenter la quantité dans le dépôt destination
-                const responseDestination = await fetch(
-                    `https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotDestinationId}`,
-                    {
+                // Si le dépôt source est Saint-Cannat, utiliser l'API WooCommerce
+                if (depotSourceId === 1) {
+                    await updateWooCommerceStock(product.sku, -product.quantity);
+                } else {
+                    // Diminuer la quantité dans le dépôt source via l'API locale
+                    await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotSourceId}`, {
                         method: 'PUT',
                         headers: {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
                             sku: product.sku,
+                            quantite: -product.quantity,
                             nom_produit: product.nom_produit,
-                            quantite: product.quantity, // Augmenter la quantité dans le dépôt destination
                         }),
-                    }
-                );
+                    });
+                }
 
-                if (!responseDestination.ok) {
-                    setError(`Erreur lors de la mise à jour du dépôt destination pour le produit ${product.sku}.`);
-                    continue;
+                // Si le dépôt destination est Saint-Cannat, utiliser l'API WooCommerce
+                if (depotDestinationId === 1) {
+                    await updateWooCommerceStock(product.sku, product.quantity);
+                } else {
+                    // Augmenter la quantité dans le dépôt destination via l'API locale
+                    await fetch(`https://apistock.maillotsoraya-conception.com:3001/stock_by_depot/update/${depotDestinationId}`, {
+                        method: 'PUT',
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            sku: product.sku,
+                            quantite: product.quantity,
+                            nom_produit: product.nom_produit,
+                        }),
+                    });
                 }
             }
 
@@ -232,6 +300,7 @@ export default function TransfertResponsable() {
             });
 
             // Générer le PDF après validation
+
             alert("Transfert validé avec succès.");
             setProducts([]);
             setSku("");

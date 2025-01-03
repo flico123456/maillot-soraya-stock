@@ -106,7 +106,14 @@ export default function Stock() {
                                 </div>
                             </Link>
 
-                            <Link href={role === 'responsable' ? "/listes_des_stocks/responsable" : "/listes_des_stocks/admin"}>
+                            <Link
+                                href={
+                                    role === 'responsable'
+                                        ? "/listes_des_stocks/responsable"
+                                        : role === 'admin'
+                                            ? "/listes_des_stocks/admin"
+                                            : "/listes_des_stocks/vendeuse"
+                                }>
                                 <div className="bg-color-white-soraya p-4 w-full rounded-md cursor-pointer">
                                     <div className="flex">
                                         <h2 className="text-xl font-bold">Listes des stocks</h2>
