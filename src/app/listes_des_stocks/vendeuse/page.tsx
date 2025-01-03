@@ -32,24 +32,6 @@ interface Depot {
     username_associe?: string;
 }
 
-// Fonction pour récupérer les produits classiques et variables depuis l'API custom
-const fetchProducts = async (): Promise<Product[]> => {
-    try {
-        const response = await fetch(
-            `https://maillotsoraya-conception.com/wp-json/customAPI/v1/getAllProductClassique`,
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        return await response.json();
-    } catch (error) {
-        console.error("Erreur lors de la récupération des produits :", error);
-        return [];
-    }
-};
-
 // Fonction pour récupérer les stocks depuis l'API locale
 const fetchLocalStock = async (depotId: number): Promise<StockItem[]> => {
     try {
@@ -83,7 +65,6 @@ const fetchDepots = async (): Promise<Depot[]> => {
 
 export default function ListeDesStock() {
     const [productList, setProductList] = useState<Product[]>([]);
-    const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
