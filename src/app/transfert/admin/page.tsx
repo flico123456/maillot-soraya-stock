@@ -1,6 +1,7 @@
 'use client';
 
 import Layout from "@/app/components/Layout";
+import { generatePDF } from "@/app/components/PdfGenerator";
 import { useState, useEffect } from "react";
 
 interface Depot {
@@ -270,7 +271,7 @@ export default function TransfertAdmin() {
                 }),
             });
 
-            // Générer le PDF après validation
+            generatePDF(products, "Retour de stock", "", "test", '/logo-soraya.png'); // Générer le PDF après validation
 
             alert("Transfert validé avec succès.");
             setProducts([]);
