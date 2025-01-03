@@ -1,7 +1,7 @@
 'use client';
 
 import Layout from "@/app/components/Layout";
-import { generatePDF } from "@/app/components/PdfGenerator";
+import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 import { useState, useEffect } from "react";
 
 interface Depot {
@@ -271,7 +271,8 @@ export default function TransfertAdmin() {
                 }),
             });
 
-            generatePDF(products, "Retour de stock", "", "test", '/logo-soraya.png'); // Générer le PDF après validation
+            // Générer le PDF après validation
+            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", "Saint-Cannat", "https://maillotsoraya-conception.com/wp-content/uploads/2021/08/logo-soraya.png");
 
             alert("Transfert validé avec succès.");
             setProducts([]);

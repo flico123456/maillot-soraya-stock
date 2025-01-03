@@ -1,7 +1,6 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+'use client';
 
-autoTable(jsPDF, {});
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 interface Product {
     name: string;
@@ -9,59 +8,78 @@ interface Product {
     quantity: number;
 }
 
-// Fonction pour convertir une image en Base64
-const getImageBase64 = (url: string): Promise<string> => {
-    return fetch(url)
-        .then(response => response.blob())
-        .then(
-            blob =>
-                new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                })
-        );
-};
+export const generatePDFWithPdfLib = async (
+    products: Product[],
+    action: string,
+    motif: string,
+    depotName: string,
+    logoUrl: string
+) => {
+    // Créer un nouveau document PDF
+    const pdfDoc = await PDFDocument.create();
 
-export const generatePDF = async (products: Product[], action: string, motif: string, depotName: string, logoUrl: string) => {
-    const doc = new jsPDF();
+    // Ajouter une page au document
+    const page = pdfDoc.addPage([595.28, 841.89]); // Format A4
+    const { width, height } = page.getSize();
 
-    try {
-        // Charger l'image sous forme de Base64
-        const logoBase64 = await getImageBase64(logoUrl);
+    // Charger la police Helvetica standard
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        // Ajouter l'image dans le PDF
-        doc.addImage(logoBase64, 'PNG', 50, 5, 100, 55); // Position et taille
+    // Charger le logo en tant qu'image
+    let logoDims = { width: 0, height: 0 };
+    if (logoUrl) {
+        try {
+            const logoBytes = await fetch(logoUrl).then((res) => res.arrayBuffer());
+            const logoImage = await pdfDoc.embedPng(logoBytes);
+            logoDims = logoImage.scale(0.5);
 
-        // Réduire la taille de la police pour le titre, motif et dépôt
-        doc.setFontSize(12); // Taille de la police du titre
-        doc.text(action, 14, 60);
-
-        doc.setFontSize(10); // Taille de la police pour le motif et le dépôt
-        doc.text(`Motif: ${motif}`, 14, 68);
-        doc.text(`Dépôt: ${depotName}`, 14, 76);
-
-        // Générer le tableau avec autoTable et personnaliser le style de l'en-tête
-        autoTable(doc, {
-            startY: 90,
-            head: [['Nom du produit', 'SKU', 'Quantité']],
-            body: products.map(product => [
-                product.name,
-                product.sku,
-                product.quantity.toString(),
-            ]),
-            headStyles: {
-                fillColor: [207, 189, 140], // Couleur de fond
-                textColor: [0, 0, 0], // Couleur du texte
-                fontStyle: 'bold', // Style de texte
-                halign: 'center', // Alignement horizontal
-            },
-        });
-
-        // Sauvegarder et télécharger le PDF
-        doc.save(`sortie-de-stock-${motif}.pdf`);
-    } catch (error) {
-        console.error("Erreur lors du chargement de l'image", error);
+            // Dessiner le logo
+            page.drawImage(logoImage, {
+                x: width / 2 - logoDims.width / 2,
+                y: height - 100,
+                width: logoDims.width,
+                height: logoDims.height,
+            });
+        } catch (error) {
+            console.error('Erreur lors du chargement du logo :', error);
+        }
     }
+
+    // Ajouter l'action, le motif, et le dépôt
+    page.setFont(font);
+    page.setFontSize(14);
+    page.drawText(`Action : ${action}`, { x: 50, y: height - 150, color: rgb(0, 0, 0) });
+    page.setFontSize(12);
+    page.drawText(`Motif : ${motif}`, { x: 50, y: height - 170, color: rgb(0, 0, 0) });
+    page.drawText(`Dépôt : ${depotName}`, { x: 50, y: height - 190, color: rgb(0, 0, 0) });
+
+    // Ajouter un tableau des produits
+    let yPosition = height - 230;
+    page.setFontSize(10);
+    page.drawText('Nom du produit', { x: 50, y: yPosition, color: rgb(0, 0, 0) });
+    page.drawText('SKU', { x: 250, y: yPosition, color: rgb(0, 0, 0) });
+    page.drawText('Quantité', { x: 450, y: yPosition, color: rgb(0, 0, 0) });
+
+    yPosition -= 20;
+
+    products.forEach((product) => {
+        page.drawText(product.name, { x: 50, y: yPosition, color: rgb(0, 0, 0) });
+        page.drawText(product.sku, { x: 250, y: yPosition, color: rgb(0, 0, 0) });
+        page.drawText(product.quantity.toString(), { x: 450, y: yPosition, color: rgb(0, 0, 0) });
+        yPosition -= 20;
+    });
+
+    // Sauvegarder le document PDF
+    const pdfBytes = await pdfDoc.save();
+
+    // Télécharger le fichier PDF
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sortie-de-stock-${motif}.pdf`;
+    link.click();
+
+    // Libérer l'URL
+    URL.revokeObjectURL(url);
 };
