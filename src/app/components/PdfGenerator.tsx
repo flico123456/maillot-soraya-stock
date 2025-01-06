@@ -106,7 +106,7 @@ export const generatePDFWithPdfLib = async (
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `sortie-de-stock-${motif}.pdf`;
+    link.download = `${action}-${motif}.pdf`;
     link.click();
 
     // Libérer l'URL
