@@ -4,6 +4,7 @@ import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ButtonClassique from "@/app/components/Button-classique";
+import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 
 interface ProductEntry {
     name: string;
@@ -184,6 +185,9 @@ export default function Sorties() {
             }
 
             // Log
+
+            // Générer le PDF après validation
+            await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depot?.name || "", "/logo-sans-fond.png");
 
             alert("Sortie validée avec succès.");
             setProducts([]);

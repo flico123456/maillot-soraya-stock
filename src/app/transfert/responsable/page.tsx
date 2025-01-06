@@ -1,6 +1,7 @@
 'use client';
 
 import Layout from "@/app/components/Layout";
+import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 import { useState, useEffect } from "react";
 
 
@@ -300,6 +301,8 @@ export default function TransfertResponsable() {
             });
 
             // Générer le PDF après validation
+            const depotSourceName = depots.find(depot => depot.id === depotSourceId)?.name || "";
+            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", depotSourceName, "/logo-sans-fond.png");
 
             alert("Transfert validé avec succès.");
             setProducts([]);

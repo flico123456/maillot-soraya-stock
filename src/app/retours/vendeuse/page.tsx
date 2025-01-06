@@ -4,6 +4,7 @@ import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ButtonClassique from "@/app/components/Button-classique";
+import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 
 interface ProductEntry {
     name: string;
@@ -199,6 +200,9 @@ export default function Retours() {
             setProducts([]);
             setSku("");
             setShowMotifModal(false);
+
+            // Générer le PDF après validation
+            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depot?.name || "", "/logo-sans-fond.png");
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des retours.");

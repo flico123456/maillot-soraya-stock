@@ -4,6 +4,7 @@ import Layout from "../../components/Layout";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ButtonClassique from "@/app/components/Button-classique";
+import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 
 interface ProductEntry {
     name: string;
@@ -268,8 +269,10 @@ export default function Retours() {
             setSku("");
             setShowMotifModal(false);
 
-            //const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
-            //generatePDF(products, "Retour de stock", selectedMotif, depotName, '/logo-soraya.png'); // Générer le PDF après validation
+            const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
+
+            // Générer le PDF après validation
+            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depotName, "/logo-sans-fond.png");
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des retours.");

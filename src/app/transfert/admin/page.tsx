@@ -272,7 +272,7 @@ export default function TransfertAdmin() {
             });
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", "Saint-Cannat", "https://maillotsoraya-conception.com/wp-content/uploads/2021/08/logo-soraya.png");
+            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", "Saint-Cannat", "/logo-sans-fond.png");
 
             alert("Transfert validé avec succès.");
             setProducts([]);
