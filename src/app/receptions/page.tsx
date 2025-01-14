@@ -25,6 +25,31 @@ export default function Reception() {
     const [showConfirmation, setShowConfirmation] = useState(false); // État pour gérer l'affichage de la boîte de dialogue de confirmation
     const [editingQuantityIndex, setEditingQuantityIndex] = useState<number | null>(null); // Index pour la modification de la quantité
 
+    const mapSpecialCharsToDigits = (input: string): string => {
+        const charToDigitMap: { [key: string]: string } = {
+            "à": "0",
+            "&": "1",
+            "é": "2",
+            "»": "3",
+            "'": "4",
+            "‘": "4",
+            "’": "4",
+            "(": "5",
+            "§": "6",
+            "è": "7",
+            "!": "8",
+            "ç": "9",
+        };
+    
+        return input
+            .toLowerCase() // Convertir toutes les lettres en minuscules
+            .replace(/\s+/g, "") // Supprimer tous les espaces
+            .split("") // Diviser la chaîne en caractères individuels
+            .map((char) => charToDigitMap[char] || "") // Convertir les caractères ou ignorer ceux non reconnus
+            .join(""); // Rejoindre les caractères en une seule chaîne
+    };
+    
+
     // Fonction pour récupérer la liste des dépôts
     const fetchDepots = async () => {
         try {
@@ -45,6 +70,8 @@ export default function Reception() {
 
     // Fonction pour récupérer le produit en fonction du SKU
     const fetchProductBySku = async () => {
+
+        console.log("dfdf")
 
         try {
             const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${sku}`, {
@@ -81,6 +108,50 @@ export default function Reception() {
         } finally {
         }
     };
+
+        // Fonction pour récupérer le produit en fonction du SKU
+        const fetchProductBySkuPhone = async () => {
+            
+            console.log(sku)
+
+            const translatedSku = mapSpecialCharsToDigits(sku); // Traduire le SKU avant de chercher le produit
+            console.log("SKU traduit :", translatedSku); // Debug pour vérifier le SKU traduit
+
+            try {
+                const response = await fetch(`https://maillotsoraya-conception.com/wp-json/wc/v3/products?sku=${translatedSku}`, {
+                    headers: {
+                        Authorization: "Basic " + btoa("ck_2a1fa890ddee2ebc1568c314734f51055eae2cba:cs_0ad45ea3da9765643738c94224a1fc58cbf341a7"),
+                    },
+                });
+    
+                const data = await response.json();
+    
+                if (data.length === 0) {
+    
+                } else {
+                    const productData = data[0];
+                    const existingProduct = products.find((p) => p.sku === productData.sku);
+    
+                    if (existingProduct) {
+                        // Si le produit existe déjà dans la liste, on augmente sa quantité
+                        setProducts((prevProducts) =>
+                            prevProducts.map((p) =>
+                                p.sku === productData.sku ? { ...p, quantity: p.quantity + 1 } : p
+                            )
+                        );
+                    } else {
+                        // Sinon, on l'ajoute avec une quantité de 1
+                        setProducts((prevProducts) => [
+                            ...prevProducts,
+                            { name: productData.name, sku: productData.sku, quantity: 1 },
+                        ]);
+                    }
+                }
+            } catch (error) {
+                //setError("Erreur lors de la récupération du produit.");
+            } finally {
+            }
+        };
 
     // Fonction pour envoyer les produits au serveur pour insertion dans la base de données
     const sendProductsToDepot = async () => {
@@ -228,6 +299,26 @@ export default function Reception() {
         return products.reduce((total, product) => total + product.quantity, 0);
     };
 
+    // Gestion de la soumission du formulaire
+    const handleSubmitPhone = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (sku.trim() !== "") {
+            fetchProductBySkuPhone();
+            setSku(""); // Réinitialise le champ SKU après la soumission
+        }
+    };
+
+    const handleKeyDownPhone = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Empêche le comportement par défaut
+            if (sku.trim() !== "") {
+                fetchProductBySkuPhone();
+                setSku(""); // Réinitialise le champ SKU après l'ajout du produit
+            }
+        }
+    };
+
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
@@ -237,6 +328,21 @@ export default function Reception() {
                     </div>
 
                     <div className="mt-10 flex justify-center">
+                        {/* Formulaire pour entrer le SKU */}
+                        <form onSubmit={handleSubmitPhone} className="space-x-4">
+                            <input
+                                className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2"
+                                type="text"
+                                placeholder="Saisir votre article"
+                                value={sku}
+                                onChange={(e) => setSku(e.target.value)}
+                                onKeyDown={handleKeyDownPhone} // Écoute la touche "Entrée"
+                                required
+                            />
+                        </form>
+                    </div>
+
+                    <div className="mt-10 flex justify-center max-xl:hidden">
                         {/* Formulaire pour entrer le SKU */}
                         <form onSubmit={handleSubmit} className="space-x-4">
                             <input

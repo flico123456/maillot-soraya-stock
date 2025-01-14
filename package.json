@@ -23,7 +23,8 @@
     "quagga": "^0.12.1",
     "react": "^18",
     "react-barcode-scanner": "^2.1.0",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "socketmobile-capturejs": "^1.3.50"
   },
   "devDependencies": {
     "@types/node": "^20",

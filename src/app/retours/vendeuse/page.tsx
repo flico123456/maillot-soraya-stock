@@ -43,6 +43,30 @@ export default function Retours() {
     const [selectedMotif, setSelectedMotif] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
 
+    const mapSpecialCharsToDigits = (input: string): string => {
+        const charToDigitMap: { [key: string]: string } = {
+            "à": "0",
+            "&": "1",
+            "é": "2",
+            "»": "3",
+            "'": "4",
+            "‘": "4",
+            "’": "4",
+            "(": "5",
+            "§": "6",
+            "è": "7",
+            "!": "8",
+            "ç": "9",
+        };
+    
+        return input
+            .toLowerCase() // Convertir toutes les lettres en minuscules
+            .replace(/\s+/g, "") // Supprimer tous les espaces
+            .split("") // Diviser la chaîne en caractères individuels
+            .map((char) => charToDigitMap[char] || "") // Convertir les caractères ou ignorer ceux non reconnus
+            .join(""); // Rejoindre les caractères en une seule chaîne
+    };
+
     useEffect(() => {
         const storedUsername = localStorage.getItem("username");
         setUsername(storedUsername);
@@ -140,6 +164,23 @@ export default function Retours() {
         setSku(""); // Réinitialise le champ SKU
     };
 
+    const fetchProductBySkuPhone = () => {
+
+        console.log("SKU saisi :", sku); // Debug pour vérifier le SKU saisi
+
+        const translatedSku = mapSpecialCharsToDigits(sku); // Traduire le SKU avant de chercher le produit
+        console.log("SKU traduit :", translatedSku); // Debug pour vérifier le SKU traduit
+
+        const product = stock.find((p) => p.sku === translatedSku);
+        if (product) {
+            addProduct(product);
+            setError("");
+        } else {
+            setError("Aucun produit trouvé pour ce SKU dans le dépôt.");
+        }
+        setSku(""); // Réinitialise le champ SKU
+    };
+
     const updateQuantity = (index: number, newQuantity: number) => {
         setProducts((prevProducts) =>
             prevProducts.map((product, i) =>
@@ -157,6 +198,13 @@ export default function Retours() {
         e.preventDefault();
         if (sku.trim() !== "") {
             fetchProductBySku();
+        }
+    };
+
+    const handleSubmitPhone = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (sku.trim() !== "") {
+            fetchProductBySkuPhone();
         }
     };
 
@@ -224,9 +272,22 @@ export default function Retours() {
                     </div>
 
                     {/* Inputs alignés */}
-                    <div className="flex mt-10 space-x-4">
+                    <div className="flex flex-col md:flex-row mt-10 space-y-4 md:space-y-0 md:space-x-4">
                         {/* Saisie par SKU */}
-                        <div className="flex-grow">
+                        <div className="flex-grow sm:hidden">
+                            <form onSubmit={handleSubmitPhone}>
+                                <input
+                                    className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
+                                    type="text"
+                                    placeholder="Saisir le SKU du produit"
+                                    value={sku}
+                                    onChange={(e) => setSku(e.target.value)}
+                                    required
+                                />
+                            </form>
+                        </div>
+
+                        <div className="flex-grow max-xl:hidden">
                             <form onSubmit={handleSubmit}>
                                 <input
                                     className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2 w-full"
