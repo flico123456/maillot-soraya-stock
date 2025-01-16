@@ -327,7 +327,7 @@ export default function Reception() {
                         <h1 className="font-bold text-3xl">Réceptions</h1>
                     </div>
 
-                    <div className="mt-10 flex justify-center">
+                    <div className="mt-10 flex justify-center sm:hidden">
                         {/* Formulaire pour entrer le SKU */}
                         <form onSubmit={handleSubmitPhone} className="space-x-4">
                             <input
