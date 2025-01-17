@@ -56,7 +56,6 @@ const fetchWooCommerceProducts = async (): Promise<Product[]> => {
         );
         const data = await response.json();
 
-        // Extraire les variations et inclure les catégories
         return data.flatMap((product: Product) =>
             product.variations.map((variation: Variation) => ({
                 id: variation.id,
@@ -161,8 +160,8 @@ export default function ListeDesStock() {
                     products = await fetchLocalStock(selectedDepot);
                 }
                 setProductList(products);
-                setFilteredProducts(products); // Met à jour les produits filtrés directement
-                setSelectedCategory(null); // Réinitialise les catégories
+                setFilteredProducts(products);
+                setSelectedCategory(null);
             } catch (error) {
                 console.error("Erreur lors de la récupération des stocks :", error);
             } finally {
@@ -187,9 +186,8 @@ export default function ListeDesStock() {
         return products.reduce((total, product) => total + (product.stock_quantity || 0), 0);
     };
 
-    // Filtrer les produits en fonction de la recherche
-    const rechercheProducts = productList.filter((product) => {
-        if (search.trim() === "" || selectedDepot === 1) return true;
+    const rechercheProducts = filteredProducts.filter((product) => {
+        if (search.trim() === "") return true;
         return (
             product.name.toLowerCase().includes(search.toLowerCase()) ||
             product.sku.toLowerCase().includes(search.toLowerCase()) ||
