@@ -130,6 +130,7 @@ export default function ListeDesStock() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [openFiltre, setOpenFiltre] = useState(false);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         const loadCategories = async () => {
@@ -182,9 +183,21 @@ export default function ListeDesStock() {
         setFilteredProducts(filtered);
     }, [productList, selectedCategory]);
 
-    const calculateTotalQuantity = () => {
-        return filteredProducts.reduce((total, product) => total + (product.stock_quantity || 0), 0);
+    const calculateTotalQuantity = (products: Product[]) => {
+        return products.reduce((total, product) => total + (product.stock_quantity || 0), 0);
     };
+
+    // Filtrer les produits en fonction de la recherche
+    const rechercheProducts = productList.filter((product) => {
+        if (search.trim() === "" || selectedDepot === 1) return true;
+        return (
+            product.name.toLowerCase().includes(search.toLowerCase()) ||
+            product.sku.toLowerCase().includes(search.toLowerCase()) ||
+            product.stock?.some((item) =>
+                item.nom_produit.toLowerCase().includes(search.toLowerCase())
+            )
+        );
+    });
 
     return (
         <div className="flex min-h-screen justify-center">
@@ -210,6 +223,19 @@ export default function ListeDesStock() {
                             </ButtonClassique>
                         </div>
                     )}
+
+                    {selectedDepot !== 1 && (
+                        <div className="mt-4">
+                            <input
+                                type="text"
+                                placeholder="Rechercher un produit"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="border border-gray-300 rounded-full p-2 w-full max-w-xs"
+                            />
+                        </div>
+                    )}
+
                     {loading ? (
                         <p className="text-gray-500 text-center mt-10">Chargement des stocks...</p>
                     ) : (
@@ -222,27 +248,27 @@ export default function ListeDesStock() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProducts.length > 0 ? (
-                                    filteredProducts.map((product) => (
-                                        <tr key={product.id} className="border-t">
-                                            <td className="py-2 px-4">{product.sku || "Non disponible"}</td>
-                                            <td className="py-2 px-4">{product.name}</td>
-                                            <td className="py-2 px-4">
-                                                {product.stock_quantity ?? "Non disponible"}
-                                            </td>
+                                {rechercheProducts.length > 0 ? (
+                                    <>
+                                        {rechercheProducts.map((product) => (
+                                            <tr key={product.id} className="border-t">
+                                                <td className="py-2 px-4">{product.sku || "Non disponible"}</td>
+                                                <td className="py-2 px-4">{product.name}</td>
+                                                <td className="py-2 px-4">
+                                                    {product.stock_quantity ?? "Non disponible"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        <tr className="font-bold border-t bg-gray-100">
+                                            <td colSpan={2} className="py-2 px-4 text-right">Total</td>
+                                            <td className="py-2 px-4">{calculateTotalQuantity(rechercheProducts)}</td>
                                         </tr>
-                                    ))
+                                    </>
                                 ) : (
                                     <tr>
                                         <td colSpan={3} className="text-center py-4 text-gray-500">
                                             Aucun produit disponible
                                         </td>
-                                    </tr>
-                                )}
-                                {filteredProducts.length > 0 && (
-                                    <tr className="font-bold border-t bg-gray-100">
-                                        <td colSpan={2} className="py-2 px-4 text-right">Total</td>
-                                        <td className="py-2 px-4">{calculateTotalQuantity()}</td>
                                     </tr>
                                 )}
                             </tbody>
