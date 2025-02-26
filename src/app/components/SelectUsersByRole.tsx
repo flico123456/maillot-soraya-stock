@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function useVendeuseUsers() {
   const [vendeuseUsers, setVendeuseUsers] = useState([]); // Stocker uniquement les vendeuses
   const [loading, setLoading] = useState(true);
 
-  // Bearer token fourni
-  //const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL21haWxsb3Rzb3JheWEtY29uY2VwdGlvbi5jb20iLCJpYXQiOjE3MjcyNzYyMDcsIm5iZiI6MTcyNzI3NjIwNywiZXhwIjoxNzI3ODgxMDA3LCJkYXRhIjp7InVzZXIiOnsiaWQiOiIzNSJ9fX0.hHbpbzS5Bjn94OoU3CnBRwQLZpc0RGb4bI71ABv8Lxc';
+  // Récupérer le token depuis le localStorage
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const token = localStorage.getItem('token'); // Récupérer le token depuis le localStorage
-
-  // Fonction pour récupérer les vendeuses via l'API
-  const fetchVendeuseUsers = async () => {
+  // Fonction pour récupérer les vendeuses via l'API, mémorisée avec useCallback
+  const fetchVendeuseUsers = useCallback(async () => {
     try {
       const response = await fetch('https://maillotsoraya-conception.com/wp-json/wp/v2/users?roles=vendeuse', {
         headers: {
@@ -27,16 +25,18 @@ export default function useVendeuseUsers() {
       } else {
         throw new Error('Erreur lors de la récupération des vendeuses');
       }
-    } catch {
-      console.log('error')
+    } catch (error) {
+      console.log("Erreur :", error);
     } finally {
       setLoading(false); // Fin du chargement
     }
-  };
+  }, [token]); // `useCallback` mémorise la fonction tant que `token` ne change pas
 
   useEffect(() => {
-    fetchVendeuseUsers(); // Appeler l'API au chargement du composant
-  }, []);
+    if (token) {
+      fetchVendeuseUsers(); // Appeler l'API uniquement si un token est présent
+    }
+  }, [fetchVendeuseUsers]); // Ajouter `fetchVendeuseUsers` en dépendance sans provoquer de boucle infinie
 
   return { vendeuseUsers, loading };
 }
