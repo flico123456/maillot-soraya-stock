@@ -1,7 +1,7 @@
 'use client';
 
 import Layout from "../components/Layout";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { generatePDFWithPdfLib } from "@/app/components/PdfGenerator";
 
@@ -17,6 +17,7 @@ interface PropsCommandes {
 interface ProductEntry {
   name: string;
   quantity: number;
+  sku: string;
 }
 
 export default function Commandes() {
@@ -80,7 +81,7 @@ export default function Commandes() {
         const formattedProducts = orderData.line_items.map(item => ({
           name: item.name,
           quantity: item.quantity,
-          sku: (item as any).sku || "N/A" // Ajout du SKU s'il existe, sinon "N/A"
+          sku: item?.sku || "N/A" // Ajout du SKU s'il existe, sinon "N/A"
         }));
   
         // Génération du PDF avec les produits de la commande
