@@ -14,7 +14,7 @@ export default function PopupNotif() {
         }, []);
 
     const handleValide = async () => {
-        const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/update/${username}`, {
+        await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/update/${username}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
