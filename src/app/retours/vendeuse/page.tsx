@@ -58,7 +58,7 @@ export default function Retours() {
             "!": "8",
             "ç": "9",
         };
-    
+
         return input
             .toLowerCase() // Convertir toutes les lettres en minuscules
             .replace(/\s+/g, "") // Supprimer tous les espaces
@@ -242,7 +242,25 @@ export default function Retours() {
                 }
             }
 
-            // Log
+            // Créer un log
+            const logContent = products.map((product) => ({
+                sku: product.sku,
+                nom_produit: product.name,
+                quantite: product.quantity,
+            }));
+
+            await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action_log: "Retour de stock",
+                    nom_log: selectedMotif,
+                    depot_id: depot?.id,
+                    contenu_log: JSON.stringify(logContent),
+                }),
+            });
 
             alert("Retour validé avec succès.");
             setProducts([]);

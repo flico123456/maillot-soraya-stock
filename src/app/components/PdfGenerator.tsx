@@ -13,60 +13,73 @@ export const generatePDFWithPdfLib = async (
     action: string,
     motif: string,
     depotName: string,
-    logoUrl: string
+    logoUrl: string // URL du logo
 ) => {
-    // Créer un nouveau document PDF
     const pdfDoc = await PDFDocument.create();
-
-    // Ajouter une page au document
     const page = pdfDoc.addPage([595.28, 841.89]); // Format A4
     const { width, height } = page.getSize();
-
-    // Charger la police Helvetica standard
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    // Charger le logo en tant qu'image
-    let logoDims = { width: 0, height: 0 };
-    if (logoUrl) {
-        try {
-            const logoBytes = await fetch(logoUrl).then((res) => res.arrayBuffer());
-            const logoImage = await pdfDoc.embedPng(logoBytes);
-            logoDims = logoImage.scale(0.5);
+    // ✅ Obtenir la date actuelle (format JJ/MM/AAAA)
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('fr-FR');
 
-            // Dessiner le logo
+    // 📌 Ajouter la date en haut à droite du PDF
+    page.setFont(font);
+    page.setFontSize(12);
+    page.drawText(`Date : ${formattedDate}`, { 
+        x: width - 120, // Position en haut à droite
+        y: height - 40, 
+        color: rgb(0, 0, 0)
+    });
+
+    // ✅ Vérifier si une URL de logo a été fournie et l'ajouter au PDF
+    let logoDims = { width: 0, height: 0 };
+    if (logoUrl && logoUrl.startsWith("http")) {
+        try {
+            const response = await fetch(logoUrl);
+            if (!response.ok) throw new Error(`Échec du téléchargement du logo (${response.status})`);
+
+            const logoBytes = await response.arrayBuffer();
+            let logoImage;
+            if (logoUrl.endsWith('.png')) {
+                logoImage = await pdfDoc.embedPng(logoBytes);
+            } else if (logoUrl.endsWith('.jpg') || logoUrl.endsWith('.jpeg')) {
+                logoImage = await pdfDoc.embedJpg(logoBytes);
+            } else {
+                throw new Error("Format d'image non supporté (utiliser PNG ou JPG)");
+            }
+
+            logoDims = logoImage.scale(0.3);
             page.drawImage(logoImage, {
                 x: width / 2 - logoDims.width / 2,
                 y: height - 100,
                 width: logoDims.width,
                 height: logoDims.height,
             });
+
         } catch (error) {
-            console.error('Erreur lors du chargement du logo :', error);
+            console.error("❌ Erreur lors du chargement du logo :", error);
         }
     }
 
-    // Ajouter l'action, le motif, et le dépôt
-    page.setFont(font);
+    // ✅ Ajouter les informations de la commande
     page.setFontSize(14);
     page.drawText(`Action : ${action}`, { x: 50, y: height - 150, color: rgb(0, 0, 0) });
     page.setFontSize(12);
     page.drawText(`Motif : ${motif}`, { x: 50, y: height - 170, color: rgb(0, 0, 0) });
     page.drawText(`Dépôt : ${depotName}`, { x: 50, y: height - 190, color: rgb(0, 0, 0) });
 
-    // Ajouter un tableau des produits avec une entête noire
+    // ✅ Ajouter le tableau des produits
     let yPosition = height - 230;
-
-    // Dessiner un fond noir pour l'entête
-    const headerHeight = 20;
     page.drawRectangle({
         x: 50,
-        y: yPosition - headerHeight,
+        y: yPosition - 20,
         width: width - 100,
-        height: headerHeight,
+        height: 20,
         color: rgb(0, 0, 0),
     });
 
-    // Ajouter le texte de l'entête en blanc
     page.setFontSize(10);
     page.drawText('Nom du produit', { x: 60, y: yPosition - 15, color: rgb(1, 1, 1) });
     page.drawText('SKU', { x: 260, y: yPosition - 15, color: rgb(1, 1, 1) });
@@ -74,41 +87,34 @@ export const generatePDFWithPdfLib = async (
 
     yPosition -= 30;
 
-    // Calculer le total des quantités
-    const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
-
-    // Ajouter les lignes du tableau
-    products.forEach((product) => {
+    for (const product of products) {
         page.drawText(product.name, { x: 60, y: yPosition, color: rgb(0, 0, 0) });
         page.drawText(product.sku, { x: 260, y: yPosition, color: rgb(0, 0, 0) });
         page.drawText(product.quantity.toString(), { x: 460, y: yPosition, color: rgb(0, 0, 0) });
         yPosition -= 20;
-    });
+    }
 
-    // Ajouter une ligne pour le total
-    yPosition -= 10; // Espacement avant la ligne de total
+    // ✅ Ajouter la ligne du total
+    yPosition -= 10;
     page.drawRectangle({
         x: 50,
         y: yPosition - 20,
         width: width - 100,
         height: 20,
-        color: rgb(0.9, 0.9, 0.9), // Fond gris clair
+        color: rgb(0.9, 0.9, 0.9),
     });
+
+    const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
     page.drawText('Total', { x: 60, y: yPosition - 10, color: rgb(0, 0, 0) });
-    page.drawText('', { x: 260, y: yPosition - 10, color: rgb(0, 0, 0) }); // Cellule vide pour le SKU
     page.drawText(totalQuantity.toString(), { x: 460, y: yPosition - 10, color: rgb(0, 0, 0) });
 
-    // Sauvegarder le document PDF
+    // ✅ Génération et téléchargement du PDF
     const pdfBytes = await pdfDoc.save();
-
-    // Télécharger le fichier PDF
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `${action}-${motif}.pdf`;
     link.click();
-
-    // Libérer l'URL
     URL.revokeObjectURL(url);
 };

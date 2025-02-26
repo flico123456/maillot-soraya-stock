@@ -251,6 +251,39 @@ export default function TransfertAdmin() {
                 }
             }
 
+            // Récuperer depot source
+
+            const fetchdepotsource = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/select/${depotSourceId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const datadepotsource = await fetchdepotsource.json();
+            const depotsource = datadepotsource[0].name;
+
+            // Ajouter notification pour le dépôt destination
+
+            // Select username du dépôt destination
+            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/select/${depotDestinationId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const data = await response.json();
+            const username = data[0].username_associe;
+            const depotdestination = data[0].name;
+
+            // Ajouter notification
+            await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/update/${username}`, {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    "notif": "1",
+                }),
+            });
+
             // Créer un log
             const logContent = products.map((product) => ({
                 sku: product.sku,
@@ -272,7 +305,7 @@ export default function TransfertAdmin() {
             });
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", "Saint-Cannat", "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", `${depotsource} - ${depotdestination}`, "/logo-sans-fond.png");
 
             alert("Transfert validé avec succès.");
             setProducts([]);

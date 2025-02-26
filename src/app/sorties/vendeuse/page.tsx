@@ -206,6 +206,35 @@ export default function Sorties() {
         }
     };
 
+    const createLog = async () => {
+        try {
+            const logContent = products.map((product) => ({
+                sku: product.sku,
+                nom_produit: product.name,
+                quantite: product.quantity,
+            }));
+
+            const response = await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action_log: "Sortie de stock",
+                    nom_log: selectedMotif,
+                    depot_id: depot?.id,
+                    contenu_log: JSON.stringify(logContent),
+                }),
+            });
+
+            if (!response.ok) {
+                setError("Erreur lors de la création du log.");
+            }
+        } catch (error) {
+            setError("Erreur lors de la création du log.");
+        }
+    };
+
 
     const handleConfirmSortie = async () => {
         if (!selectedMotif) {
@@ -234,6 +263,8 @@ export default function Sorties() {
             }
 
             // Log
+
+            await createLog();
 
             // Générer le PDF après validation
             await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depot?.name || "", "/logo-sans-fond.png");

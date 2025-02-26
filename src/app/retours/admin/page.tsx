@@ -264,6 +264,26 @@ export default function Retours() {
 
             // Log
 
+            // Créer un log
+            const logContent = products.map((product) => ({
+                sku: product.sku,
+                nom_produit: product.name,
+                quantite: product.quantity,
+            }));
+
+            await fetch("https://apistock.maillotsoraya-conception.com:3001/logs/create", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    action_log: "Retour de stock",
+                    nom_log: selectedMotif,
+                    depot_id: selectedDepotId,
+                    contenu_log: JSON.stringify(logContent),
+                }),
+            });
+
             alert("Retour validé avec succès.");
             setProducts([]);
             setSku("");
@@ -272,7 +292,7 @@ export default function Retours() {
             const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depotName, "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depotName, "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg");
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des retours.");

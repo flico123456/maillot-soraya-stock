@@ -4,10 +4,21 @@ import Layout from "@/app/components/Layout";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import PopupNotif from "../components/PopUpNotif";
+
+interface StockProps {
+    id: number;
+    name: string;
+    username_associe: string;
+    notif: string;
+}
 
 export default function Stock() {
 
     const [role, setRole] = useState<string | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
+    const [dataUsernames, setDataUsernames] = useState<StockProps[]>([]);
+    const [showNotification, setShowNotification] = useState<boolean>(false);
 
     // Vérifier le rôle dans le localStorage
     useEffect(() => {
@@ -15,9 +26,42 @@ export default function Stock() {
         setRole(storedRole);
     }, []);
 
+    useEffect(() => {
+        const user = localStorage.getItem('username');
+        setUsername(user);
+    }, []);
+
+    useEffect(() => {
+        const CheckNotif = async (user: string) => {
+            const response = await fetch(`https://apistock.maillotsoraya-conception.com:3001/depots/select/byuser/${user}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            const data = await response.json();
+            setDataUsernames(data);
+        };
+
+        if (username) {
+            CheckNotif(username);
+        }
+    }, [username]);
+
+    // Vérifier si une notification doit être affichée
+    useEffect(() => {
+        console.log(dataUsernames);
+        const hasNotif = dataUsernames.some(item => item.notif === "1");
+        setShowNotification(hasNotif);
+    }, [dataUsernames]);
+
+
     return (
         <div className="flex min-h-screen justify-center">
             <Layout>
+                {showNotification && (
+                    <PopupNotif/>
+                )}
                 <div className="p-8 w-full mt-20">
                     {/* Titre de la page */}
                     <div className="flex">

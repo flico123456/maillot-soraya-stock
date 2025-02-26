@@ -127,6 +127,33 @@ const VerticalNavbar = () => {
                                     </Link>
                                 </li>
                             )}
+                            {role !== "vendeuse" && role !== "responsable" && (
+                                <li className="ml-8">
+                                    <Link href="/commandes" passHref>
+                                        <div className="flex w-full justify-between items-center mt-5 pr-4">
+                                            <div className="flex items-center">
+                                                <Image
+                                                    src="/verifier.png"
+                                                    alt="logs"
+                                                    width={30}
+                                                    height={30}
+                                                />
+                                                <h1 className="text-black ml-3 mt-1">Commandes</h1>
+                                            </div>
+                                            <svg
+                                                className="w-5 h-5 text-gray-500"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+                                            </svg>
+                                        </div>
+                                    </Link>
+                                </li>
+                            )}
                         </ul>
                     </div>
                     <div className='flex justify-center'>
