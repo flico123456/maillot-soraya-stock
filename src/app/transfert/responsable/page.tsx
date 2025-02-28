@@ -335,7 +335,6 @@ export default function TransfertResponsable() {
             });
 
             // Générer le PDF après validation
-            const depotSourceName = depots.find(depot => depot.id === depotSourceId)?.name || "";
             await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", `${depotsource} - ${depotdestination}`, "/logo-sans-fond.png");
 
             alert("Transfert validé avec succès.");
