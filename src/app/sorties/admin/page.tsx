@@ -522,6 +522,7 @@ export default function Sorties() {
                                 >
                                     <option value="" disabled>Choisir un motif</option>
                                     <option value="Vente">Vente</option>
+                                    <option value="Echange">Echange</option>
                                     <option value="Offert">Offert</option>
                                 </select>
 

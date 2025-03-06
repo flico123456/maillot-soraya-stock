@@ -445,6 +445,7 @@ export default function Retours() {
                                 >
                                     <option value="" disabled>Choisir un motif</option>
                                     <option value="Erreur">Erreur</option>
+                                    <option value="Echange">Echange</option>
                                     <option value="Remboursement">Remboursement</option>
                                     <option value="Abime">Abimé</option>
                                 </select>
