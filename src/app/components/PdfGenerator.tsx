@@ -16,7 +16,7 @@ export const generatePDFWithPdfLib = async (
     logoUrl: string // URL du logo
 ) => {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595.28, 841.89]); // Format A4
+    let page = pdfDoc.addPage([595.28, 841.89]); // Format A4
     const { width, height } = page.getSize();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -50,10 +50,10 @@ export const generatePDFWithPdfLib = async (
                 throw new Error("Format d'image non supporté (utiliser PNG ou JPG)");
             }
 
-            logoDims = logoImage.scale(0.3);
+            logoDims = logoImage.scale(0.1); // Réduire la taille du logo
             page.drawImage(logoImage, {
                 x: width / 2 - logoDims.width / 2,
-                y: height - 100,
+                y: height - 120, // Remonter le logo
                 width: logoDims.width,
                 height: logoDims.height,
             });
@@ -72,41 +72,60 @@ export const generatePDFWithPdfLib = async (
 
     // ✅ Ajouter le tableau des produits
     let yPosition = height - 230;
-    page.drawRectangle({
-        x: 50,
-        y: yPosition - 20,
-        width: width - 100,
-        height: 20,
-        color: rgb(0, 0, 0),
-    });
+    const margin = 50;
+    const rowHeight = 20;
+    const headerHeight = 30;
 
-    page.setFontSize(10);
-    page.drawText('Nom du produit', { x: 60, y: yPosition - 15, color: rgb(1, 1, 1) });
-    page.drawText('SKU', { x: 260, y: yPosition - 15, color: rgb(1, 1, 1) });
-    page.drawText('Quantité', { x: 460, y: yPosition - 15, color: rgb(1, 1, 1) });
+    const addTableHeader = () => {
+        page.drawRectangle({
+            x: margin,
+            y: yPosition - headerHeight,
+            width: width - 2 * margin,
+            height: headerHeight,
+            color: rgb(0, 0, 0),
+        });
 
-    yPosition -= 30;
+        page.setFontSize(10);
+        page.drawText('Nom du produit', { x: margin + 10, y: yPosition - 15, color: rgb(1, 1, 1) });
+        page.drawText('SKU', { x: margin + 210, y: yPosition - 15, color: rgb(1, 1, 1) });
+        page.drawText('Quantité', { x: margin + 410, y: yPosition - 15, color: rgb(1, 1, 1) });
+
+        yPosition -= headerHeight + rowHeight;
+    };
+
+    addTableHeader();
 
     for (const product of products) {
-        page.drawText(product.name, { x: 60, y: yPosition, color: rgb(0, 0, 0) });
-        page.drawText(product.sku, { x: 260, y: yPosition, color: rgb(0, 0, 0) });
-        page.drawText(product.quantity.toString(), { x: 460, y: yPosition, color: rgb(0, 0, 0) });
-        yPosition -= 20;
+        if (yPosition < margin) {
+            page = pdfDoc.addPage([595.28, 841.89]);
+            yPosition = height - margin;
+            addTableHeader();
+        }
+
+        page.drawText(product.name, { x: margin + 10, y: yPosition, color: rgb(0, 0, 0) });
+        page.drawText(product.sku, { x: margin + 210, y: yPosition, color: rgb(0, 0, 0) });
+        page.drawText(product.quantity.toString(), { x: margin + 410, y: yPosition, color: rgb(0, 0, 0) });
+        yPosition -= rowHeight;
     }
 
     // ✅ Ajouter la ligne du total
+    if (yPosition < margin) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        yPosition = height - margin;
+    }
+
     yPosition -= 10;
     page.drawRectangle({
-        x: 50,
+        x: margin,
         y: yPosition - 20,
-        width: width - 100,
+        width: width - 2 * margin,
         height: 20,
         color: rgb(0.9, 0.9, 0.9),
     });
 
     const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
-    page.drawText('Total', { x: 60, y: yPosition - 10, color: rgb(0, 0, 0) });
-    page.drawText(totalQuantity.toString(), { x: 460, y: yPosition - 10, color: rgb(0, 0, 0) });
+    page.drawText('Total', { x: margin + 10, y: yPosition - 10, color: rgb(0, 0, 0) });
+    page.drawText(totalQuantity.toString(), { x: margin + 410, y: yPosition - 10, color: rgb(0, 0, 0) });
 
     // ✅ Génération et téléchargement du PDF
     const pdfBytes = await pdfDoc.save();

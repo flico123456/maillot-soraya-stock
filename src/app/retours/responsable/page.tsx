@@ -252,7 +252,7 @@ export default function Retours() {
             const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depotName, "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Retour de stock", selectedMotif, depotName, "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg");
 
         } catch (error) {
             setError("Une erreur est survenue lors de la validation des retours.");

@@ -267,7 +267,7 @@ export default function Sorties() {
             await createLog();
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depot?.name || "", "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depot?.name || "", "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg");
 
             alert("Sortie validée avec succès.");
             setProducts([]);

@@ -305,7 +305,7 @@ export default function TransfertAdmin() {
             });
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", `${depotsource} - ${depotdestination}`, "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Transfert", "Transfert de stock", `${depotsource} - ${depotdestination}`, "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg");
 
             alert("Transfert validé avec succès.");
             setProducts([]);

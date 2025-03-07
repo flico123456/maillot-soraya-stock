@@ -70,7 +70,7 @@ export default function LogsPage() {
                 quantity: product.quantite, // Remplacer `quantite` par `quantity`
             }));
             // Générer le PDF avec les produits mappés
-            generatePDFWithPdfLib(mappedProducts, log.action_log, log.nom_log, depotName, '/logo-soraya.png');
+            generatePDFWithPdfLib(mappedProducts, log.action_log, log.nom_log, depotName, 'https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg');
         } catch (error) {
             console.error("Erreur lors du traitement du log:", error);
             setError("Erreur lors du traitement du log.");
@@ -83,7 +83,7 @@ export default function LogsPage() {
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-gray-200">
+        <div className="flex min-h-screen">
             <Layout>
                 <div className="ml-64 p-8 w-full">
                     <div className="mt-10 ml-10">
@@ -113,7 +113,7 @@ export default function LogsPage() {
                                         <td className="py-2 px-4">{new Date(log.date).toLocaleDateString()}</td>
                                         <td className="py-2 px-4">
                                             <button
-                                                className="bg-black text-white p-2 px-3 rounded-full hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
+                                                className="bg-black text-white p-2 px-3 rounded-xl hover:bg-white hover:text-black hover:border-black border transition-all duration-300"
                                                 onClick={() => handleConsultLog(log)}
                                             >
                                                 Consulter

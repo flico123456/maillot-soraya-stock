@@ -230,7 +230,7 @@ export default function Sorties() {
             const depotName = depots.find((d) => d.id === selectedDepotId)?.name || "Dépôt inconnu";
 
             // Générer le PDF après validation
-            await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depotName, "/logo-sans-fond.png");
+            await generatePDFWithPdfLib(products, "Sortie de stock", selectedMotif, depotName, "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg");
 
             alert("Sortie validée avec succès.");
             setProducts([]);
