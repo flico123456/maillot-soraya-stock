@@ -34,6 +34,30 @@ export default function TransfertAdmin() {
     const [depotDestinationId, setDepotDestinationId] = useState<number | null>(null);
     const [error, setError] = useState("");
 
+    const mapSpecialCharsToDigits = (input: string): string => {
+        const charToDigitMap: { [key: string]: string } = {
+            "à": "0",
+            "&": "1",
+            "é": "2",
+            "»": "3",
+            "'": "4",
+            "‘": "4",
+            "’": "4",
+            "(": "5",
+            "§": "6",
+            "è": "7",
+            "!": "8",
+            "ç": "9",
+        };
+    
+        return input
+            .toLowerCase() // Convertir toutes les lettres en minuscules
+            .replace(/\s+/g, "") // Supprimer tous les espaces
+            .split("") // Diviser la chaîne en caractères individuels
+            .map((char) => charToDigitMap[char] || "") // Convertir les caractères ou ignorer ceux non reconnus
+            .join(""); // Rejoindre les caractères en une seule chaîne
+    };
+
     // Fonction pour mettre à jour la quantité d'un produit dans le tableau
     const updateQuantity = (index: number, newQuantity: number) => {
         setProducts((prevProducts) =>
@@ -102,6 +126,68 @@ export default function TransfertAdmin() {
             setError("Erreur lors de la récupération des produits du dépôt.");
             return [];
         }
+    };
+
+    const fetchProductBySkuPhone = async () => {
+        if (!depotSourceId) {
+            setError("Sélectionnez un dépôt source.");
+            return;
+        }
+
+        console.log("SKU saisi :", sku); // Debug pour vérifier le SKU saisi
+
+        const translatedSku = mapSpecialCharsToDigits(sku); // Traduire le SKU avant de chercher le produit
+        console.log("SKU traduit :", translatedSku); // Debug pour vérifier le SKU traduit
+
+        setError("");
+
+        try {
+            let foundProduct: ProductStock | null = null;
+
+            // Si le dépôt source est Saint-Cannat, utiliser l'API WooCommerce
+            if (depotSourceId === SAINT_CANNAT_ID) {
+                const wooProduct = await fetchProductFromWooCommerce(translatedSku);
+                if (wooProduct) {
+                    foundProduct = {
+                        nom_produit: wooProduct.name,
+                        sku: wooProduct.sku,
+                        quantite: wooProduct.quantity,
+                    };
+                }
+            } else {
+                // Sinon, utiliser l'API locale
+                const stocks = await fetchProductsByDepot(depotSourceId);
+                stocks.forEach((product: ProductStock) => {
+                    if (product.sku === translatedSku) {
+                        foundProduct = product;
+                    }
+                });
+            }
+
+            if (!foundProduct) {
+                setError("Produit non trouvé dans le dépôt source.");
+            } else if (foundProduct.quantite < 1) {
+                setError(`Quantité insuffisante pour le produit ${foundProduct.sku} (Stock: ${foundProduct.quantite}).`);
+            } else {
+                const existingProduct = products.find((p) => p.sku === foundProduct!.sku);
+                if (existingProduct) {
+                    setProducts((prevProducts) =>
+                        prevProducts.map((p) =>
+                            p.sku === foundProduct!.sku ? { ...p, quantity: p.quantity + 1 } : p
+                        )
+                    );
+                } else {
+                    setProducts((prevProducts) => [
+                        ...prevProducts,
+                        { nom_produit: foundProduct!.nom_produit, name: foundProduct!.nom_produit, sku: foundProduct!.sku, quantity: 1 },
+                    ]);
+                }
+            }
+        } catch (error) {
+            setError("Erreur lors de la récupération du produit.");
+        } finally {
+        }
+        setSku(""); // Réinitialise le champ SKU
     };
 
     // Récupérer un produit par SKU dans le dépôt source
@@ -323,6 +409,13 @@ export default function TransfertAdmin() {
         }
     };
 
+    const handleSubmitPhone = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (sku.trim() !== "") {
+            fetchProductBySkuPhone();
+        }
+    };
+
     // Calculer le total des quantités
     const calculateTotalQuantity = () => {
         return products.reduce((total, product) => total + product.quantity, 0);
@@ -384,6 +477,20 @@ export default function TransfertAdmin() {
                                 className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2"
                                 type="text"
                                 placeholder="Saisir le SKU"
+                                value={sku}
+                                onChange={(e) => setSku(e.target.value)}
+                                required
+                            />
+                        </form>
+                    </div>
+
+                    <div className="mt-4 text-center">
+                        {/* Input pour saisir le SKU */}
+                        <form onSubmit={handleSubmitPhone} className="space-x-4">
+                            <input
+                                className="border border-gray-300 rounded-lg focus:outline-none focus:border-black transition p-2"
+                                type="text"
+                                placeholder="Saisir le SKU via MAC"
                                 value={sku}
                                 onChange={(e) => setSku(e.target.value)}
                                 required
