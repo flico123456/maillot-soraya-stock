@@ -90,7 +90,7 @@ export default function Commandes() {
           `Sortie de stock`,
           `Vente internet - ${orderData.billing.first_name} ${orderData.billing.last_name}`,
           `Saint Cannat`,
-          "/logo-soraya.png"
+          "https://i.postimg.cc/fRF4QnS8/Soraya-Logo-Exe-Validee-noir-et-or-recadr.jpg"
         );
       }
   
